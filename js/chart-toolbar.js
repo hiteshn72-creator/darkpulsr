@@ -14,6 +14,64 @@
     { id: '1M', label: 'M' },
   ];
 
+  const CHART_TYPES = [
+    {
+      group: 'bars',
+      items: [
+        { id: 'bars', label: 'Bars', icon: 'bars' },
+        { id: 'candles', label: 'Candles', icon: 'candles' },
+        { id: 'hollow', label: 'Hollow candles', icon: 'hollow' },
+        { id: 'volume_candles', label: 'Volume candles', icon: 'volume_candles' },
+      ],
+    },
+    {
+      group: 'line',
+      items: [
+        { id: 'line', label: 'Line', icon: 'line' },
+        { id: 'line_markers', label: 'Line with markers', icon: 'line_markers' },
+        { id: 'step', label: 'Step line', icon: 'step' },
+      ],
+    },
+    {
+      group: 'area',
+      items: [
+        { id: 'area', label: 'Area', icon: 'area' },
+        { id: 'hlc_area', label: 'HLC area', icon: 'hlc_area' },
+        { id: 'baseline', label: 'Baseline', icon: 'baseline' },
+      ],
+    },
+    {
+      group: 'columns',
+      items: [
+        { id: 'columns', label: 'Columns', icon: 'columns' },
+        { id: 'high_low', label: 'High-low', icon: 'high_low' },
+      ],
+    },
+    {
+      group: 'special',
+      items: [
+        { id: 'footprint', label: 'Volume footprint', icon: 'footprint', disabled: true },
+      ],
+    },
+  ];
+
+  const CHART_TYPE_ICONS = {
+    bars: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 8v12M8 8h-2M8 20h-2M20 12v8M20 12h2M20 20h-2"/></svg>',
+    candles: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="10" y="10" width="8" height="8" fill="currentColor" opacity="0.35"/><path d="M14 6v4M14 18v4"/></svg>',
+    hollow: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="10" y="10" width="8" height="8"/><path d="M14 6v4M14 18v4"/></svg>',
+    volume_candles: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="10" y="12" width="8" height="6" fill="currentColor" opacity="0.35"/><path d="M14 7v5M14 18v3M6 20h16" opacity="0.5"/></svg>',
+    line: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 20 L10 14 L16 17 L23 8"/></svg>',
+    line_markers: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 20 L10 14 L16 17 L23 8"/><circle cx="10" cy="14" r="1.5" fill="currentColor"/><circle cx="16" cy="17" r="1.5" fill="currentColor"/><circle cx="23" cy="8" r="1.5" fill="currentColor"/></svg>',
+    step: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 20 H10 V14 H16 V17 H23 V8"/></svg>',
+    area: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 20 L10 14 L16 17 L23 8 V22 H5 Z" fill="currentColor" opacity="0.15"/><path d="M5 20 L10 14 L16 17 L23 8"/></svg>',
+    hlc_area: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12 L10 10 L16 14 L23 9" opacity="0.5"/><path d="M5 18 L10 16 L16 20 L23 15" opacity="0.5"/><path d="M5 15 L10 13 L16 17 L23 12"/></svg>',
+    baseline: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 14h20" stroke-dasharray="3 2" opacity="0.6"/><path d="M5 16 L10 12 L16 15 L23 10"/></svg>',
+    columns: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="7" y="14" width="4" height="8" fill="currentColor" opacity="0.35"/><rect x="12" y="10" width="4" height="12" fill="currentColor" opacity="0.35"/><rect x="17" y="16" width="4" height="6" fill="currentColor" opacity="0.35"/></svg>',
+    high_low: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 8v12M20 12v8"/></svg>',
+    footprint: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="10" y="10" width="8" height="8" opacity="0.35"/><path d="M6 12h6M16 12h6M6 16h6M16 16h6" opacity="0.6"/></svg>',
+    default: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="10" y="10" width="8" height="8" fill="currentColor" opacity="0.35"/><path d="M14 6v4M14 18v4"/></svg>',
+  };
+
   const INDICATORS = [
     { id: 'sma', name: 'Moving Average (SMA)', category: 'Popular' },
     { id: 'ema', name: 'Moving Average (EMA)', category: 'Popular' },
@@ -66,6 +124,7 @@
         onSymbolSelect: options.onSymbolSelect || (() => {}),
         onCompare: options.onCompare || (() => {}),
         onCompareRemove: options.onCompareRemove || (() => {}),
+        onChartTypeChange: options.onChartTypeChange || (() => {}),
         onTimeframeChange: options.onTimeframeChange || (() => {}),
         onSettings: options.onSettings || (() => {}),
         onIndicatorAdd: options.onIndicatorAdd || (() => {}),
@@ -84,6 +143,7 @@
         layout: '1',
         indicators: [],
         compareSymbols: [],
+        chartType: 'candles',
         replayActive: false,
         canUndo: false,
         canRedo: false,
@@ -118,6 +178,25 @@
               <span class="dp-toolbar-icon">${ICONS.plus}</span>
             </button>
             <div class="dp-toolbar-compare-wrap hidden" data-tb-compare-wrap aria-label="Compare symbols"></div>
+
+            <div class="dp-toolbar-dropdown-wrap" data-dropdown="charttype">
+              <button type="button" class="dp-toolbar-btn dp-toolbar-btn-icon" data-action="charttype-toggle" title="Chart type">
+                <span class="dp-toolbar-icon dp-toolbar-charttype-icon" data-tb-charttype-icon>${CHART_TYPE_ICONS.candles}</span>
+              </button>
+              <div class="dp-toolbar-charttype-menu hidden" data-menu="charttype" role="menu">
+                ${CHART_TYPES.map((group, groupIndex) => {
+                  const divider = groupIndex > 0 ? '<div class="dp-charttype-divider"></div>' : '';
+                  const rows = group.items.map((item) => (
+                    `<button type="button" class="dp-charttype-item${item.disabled ? ' is-disabled' : ''}" data-chart-type="${item.id}" role="menuitem"${item.disabled ? ' disabled' : ''}>
+                      <span class="dp-charttype-icon">${CHART_TYPE_ICONS[item.icon] || CHART_TYPE_ICONS.default}</span>
+                      <span class="dp-charttype-label">${escapeHtml(item.label)}</span>
+                      <span class="dp-charttype-star" aria-hidden="true">☆</span>
+                    </button>`
+                  )).join('');
+                  return `${divider}${rows}`;
+                }).join('')}
+              </div>
+            </div>
           </div>
 
           <div class="dp-toolbar-section dp-toolbar-center">
@@ -244,6 +323,7 @@
         indicatorSearch: this.root.querySelector('[data-indicator-search]'),
         indicatorList: this.root.querySelector('[data-indicator-list]'),
         compareList: this.root.querySelector('[data-tb-compare-wrap]'),
+        chartTypeIcon: this.root.querySelector('[data-tb-charttype-icon]'),
       };
     }
 
@@ -264,6 +344,10 @@
         }
         if (action === 'compare') {
           this.handlers.onCompare(this.state);
+          return;
+        }
+        if (action === 'charttype-toggle') {
+          this._toggleMenu('charttype');
           return;
         }
         if (action === 'compare-remove') {
@@ -315,6 +399,15 @@
         }
         if (action === 'overflow-toggle') {
           this._toggleMenu('overflow');
+          return;
+        }
+
+        if (target.dataset.chartType) {
+          if (target.classList.contains('is-disabled') || target.disabled) return;
+          this._closeMenus();
+          const typeId = target.dataset.chartType;
+          this.setState({ chartType: typeId });
+          this.handlers.onChartTypeChange(typeId, this.state);
           return;
         }
 
@@ -396,6 +489,14 @@
       });
 
       this._renderCompareChips();
+
+      const chartType = this.state.chartType || 'candles';
+      this.root.querySelectorAll('[data-chart-type]').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.dataset.chartType === chartType);
+      });
+      if (this.els.chartTypeIcon) {
+        this.els.chartTypeIcon.innerHTML = CHART_TYPE_ICONS[chartType] || CHART_TYPE_ICONS.candles;
+      }
     }
 
     _renderCompareChips() {
@@ -448,4 +549,5 @@
   }
 
   window.ChartToolbar = ChartToolbar;
+  window.CHART_TYPES = CHART_TYPES;
 })();

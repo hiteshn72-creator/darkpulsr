@@ -144,6 +144,46 @@ const MAX_COMPARE_SYMBOLS = 4;
 
 
 
+const CHART_TYPE_IDS = {
+
+  BARS: 'bars',
+
+  CANDLES: 'candles',
+
+  HOLLOW: 'hollow',
+
+  VOLUME_CANDLES: 'volume_candles',
+
+  LINE: 'line',
+
+  LINE_MARKERS: 'line_markers',
+
+  STEP: 'step',
+
+  AREA: 'area',
+
+  HLC_AREA: 'hlc_area',
+
+  BASELINE: 'baseline',
+
+  COLUMNS: 'columns',
+
+  HIGH_LOW: 'high_low',
+
+  FOOTPRINT: 'footprint',
+
+};
+
+
+
+const LINE_TYPE = typeof LightweightCharts !== 'undefined'
+
+  ? LightweightCharts.LineType
+
+  : { Simple: 0, WithSteps: 1 };
+
+
+
 const DARKPULSR_CHART_INTERACTION = {
 
   handleScroll: {
@@ -366,6 +406,8 @@ class DarkPulsrChart {
 
     this.compareEntries = [];
 
+    this.chartType = CHART_TYPE_IDS.CANDLES;
+
 
 
     this._buildChart();
@@ -540,7 +582,7 @@ class DarkPulsrChart {
 
   _setChartData(candles) {
 
-    this.candleSeries.setData(candles);
+    this.candleSeries.setData(this._seriesDataFromCandles(candles));
 
     const vol = this._volumeBars(candles);
 
@@ -549,6 +591,488 @@ class DarkPulsrChart {
     else this.volumeSeries.setData([]);
 
     this._updateLegendFromCandle(candles[candles.length - 1], candles);
+
+  }
+
+
+
+  _isOhlcChartType(type = this.chartType) {
+
+    return [
+
+      CHART_TYPE_IDS.BARS,
+
+      CHART_TYPE_IDS.CANDLES,
+
+      CHART_TYPE_IDS.HOLLOW,
+
+      CHART_TYPE_IDS.VOLUME_CANDLES,
+
+      CHART_TYPE_IDS.HIGH_LOW,
+
+    ].includes(type);
+
+  }
+
+
+
+  _hollowCandle(c) {
+
+    const up = c.close >= c.open;
+
+    return {
+
+      ...c,
+
+      color: up ? 'rgba(38, 166, 154, 0.05)' : '#ef5350',
+
+      borderColor: up ? '#26a69a' : '#ef5350',
+
+      wickColor: up ? '#26a69a' : '#ef5350',
+
+    };
+
+  }
+
+
+
+  _volumeCandle(c, maxVolume) {
+
+    const up = c.close >= c.open;
+
+    const vol = c.volume || 0;
+
+    const intensity = maxVolume > 0 ? Math.min(1, vol / maxVolume) : 0.5;
+
+    const alpha = 0.25 + intensity * 0.75;
+
+    const upColor = `rgba(38, 166, 154, ${alpha.toFixed(2)})`;
+
+    const downColor = `rgba(239, 83, 80, ${alpha.toFixed(2)})`;
+
+    return {
+
+      ...c,
+
+      color: up ? upColor : downColor,
+
+      borderColor: up ? '#26a69a' : '#ef5350',
+
+      wickColor: up ? '#26a69a' : '#ef5350',
+
+    };
+
+  }
+
+
+
+  _seriesDataFromCandles(candles) {
+
+    if (!candles.length) return [];
+
+    const maxVolume = Math.max(...candles.map((c) => c.volume || 0), 1);
+
+
+
+    switch (this.chartType) {
+
+      case CHART_TYPE_IDS.LINE:
+
+      case CHART_TYPE_IDS.LINE_MARKERS:
+
+      case CHART_TYPE_IDS.STEP:
+
+      case CHART_TYPE_IDS.AREA:
+
+        return candles.map((c) => ({ time: c.time, value: c.close }));
+
+      case CHART_TYPE_IDS.HLC_AREA:
+
+        return candles.map((c) => ({ time: c.time, value: (c.high + c.low + c.close) / 3 }));
+
+      case CHART_TYPE_IDS.BASELINE:
+
+        return candles.map((c) => ({ time: c.time, value: c.close }));
+
+      case CHART_TYPE_IDS.COLUMNS:
+
+        return candles.map((c) => ({
+
+          time: c.time,
+
+          value: c.close,
+
+          color: c.close >= c.open ? 'rgba(38, 166, 154, 0.75)' : 'rgba(239, 83, 80, 0.75)',
+
+        }));
+
+      case CHART_TYPE_IDS.HIGH_LOW:
+
+        return candles.map((c) => ({
+
+          time: c.time,
+
+          open: c.low,
+
+          high: c.high,
+
+          low: c.low,
+
+          close: c.high,
+
+        }));
+
+      case CHART_TYPE_IDS.HOLLOW:
+
+        return candles.map((c) => this._hollowCandle(c));
+
+      case CHART_TYPE_IDS.VOLUME_CANDLES:
+
+        return candles.map((c) => this._volumeCandle(c, maxVolume));
+
+      case CHART_TYPE_IDS.BARS:
+
+      case CHART_TYPE_IDS.CANDLES:
+
+      default:
+
+        return candles;
+
+    }
+
+  }
+
+
+
+  _streamUpdateFromCandle(candle) {
+
+    const maxVolume = Math.max(...this._lastCandles.map((c) => c.volume || 0), candle.volume || 1, 1);
+
+
+
+    switch (this.chartType) {
+
+      case CHART_TYPE_IDS.LINE:
+
+      case CHART_TYPE_IDS.LINE_MARKERS:
+
+      case CHART_TYPE_IDS.STEP:
+
+      case CHART_TYPE_IDS.AREA:
+
+      case CHART_TYPE_IDS.BASELINE:
+
+        return { time: candle.time, value: candle.close };
+
+      case CHART_TYPE_IDS.HLC_AREA:
+
+        return { time: candle.time, value: (candle.high + candle.low + candle.close) / 3 };
+
+      case CHART_TYPE_IDS.COLUMNS:
+
+        return {
+
+          time: candle.time,
+
+          value: candle.close,
+
+          color: candle.close >= candle.open ? 'rgba(38, 166, 154, 0.75)' : 'rgba(239, 83, 80, 0.75)',
+
+        };
+
+      case CHART_TYPE_IDS.HIGH_LOW:
+
+        return {
+
+          time: candle.time,
+
+          open: candle.low,
+
+          high: candle.high,
+
+          low: candle.low,
+
+          close: candle.high,
+
+        };
+
+      case CHART_TYPE_IDS.HOLLOW:
+
+        return this._hollowCandle(candle);
+
+      case CHART_TYPE_IDS.VOLUME_CANDLES:
+
+        return this._volumeCandle(candle, maxVolume);
+
+      default:
+
+        return candle;
+
+    }
+
+  }
+
+
+
+  _createMainSeries(type) {
+
+    const priceScaleId = 'right';
+
+
+
+    switch (type) {
+
+      case CHART_TYPE_IDS.BARS:
+
+        return this.chart.addBarSeries({
+
+          upColor: TV_CANDLE_COLORS.upColor,
+
+          downColor: TV_CANDLE_COLORS.downColor,
+
+          thinBars: false,
+
+          priceScaleId,
+
+        });
+
+      case CHART_TYPE_IDS.HOLLOW:
+
+      case CHART_TYPE_IDS.VOLUME_CANDLES:
+
+      case CHART_TYPE_IDS.CANDLES:
+
+        return this.chart.addCandlestickSeries({
+
+          ...TV_CANDLE_COLORS,
+
+          priceScaleId,
+
+        });
+
+      case CHART_TYPE_IDS.LINE:
+
+        return this.chart.addLineSeries({
+
+          color: '#2962ff',
+
+          lineWidth: 2,
+
+          priceScaleId,
+
+          crosshairMarkerVisible: true,
+
+          lastValueVisible: true,
+
+        });
+
+      case CHART_TYPE_IDS.LINE_MARKERS:
+
+        return this.chart.addLineSeries({
+
+          color: '#2962ff',
+
+          lineWidth: 2,
+
+          priceScaleId,
+
+          crosshairMarkerVisible: true,
+
+          pointMarkersVisible: true,
+
+          lastValueVisible: true,
+
+        });
+
+      case CHART_TYPE_IDS.STEP:
+
+        return this.chart.addLineSeries({
+
+          color: '#2962ff',
+
+          lineWidth: 2,
+
+          lineType: LINE_TYPE.WithSteps ?? 1,
+
+          priceScaleId,
+
+          crosshairMarkerVisible: true,
+
+          lastValueVisible: true,
+
+        });
+
+      case CHART_TYPE_IDS.AREA:
+
+        return this.chart.addAreaSeries({
+
+          lineColor: '#2962ff',
+
+          topColor: 'rgba(41, 98, 255, 0.35)',
+
+          bottomColor: 'rgba(41, 98, 255, 0.02)',
+
+          lineWidth: 2,
+
+          priceScaleId,
+
+        });
+
+      case CHART_TYPE_IDS.HLC_AREA:
+
+        return this.chart.addAreaSeries({
+
+          lineColor: '#787b86',
+
+          topColor: 'rgba(120, 123, 134, 0.35)',
+
+          bottomColor: 'rgba(120, 123, 134, 0.05)',
+
+          lineWidth: 1,
+
+          priceScaleId,
+
+        });
+
+      case CHART_TYPE_IDS.BASELINE: {
+
+        const base = this._lastCandles[0]?.close ?? 0;
+
+        return this.chart.addBaselineSeries({
+
+          baseValue: { type: 'price', price: base },
+
+          topLineColor: '#26a69a',
+
+          topFillColor1: 'rgba(38, 166, 154, 0.28)',
+
+          topFillColor2: 'rgba(38, 166, 154, 0.05)',
+
+          bottomLineColor: '#ef5350',
+
+          bottomFillColor1: 'rgba(239, 83, 80, 0.28)',
+
+          bottomFillColor2: 'rgba(239, 83, 80, 0.05)',
+
+          lineWidth: 2,
+
+          priceScaleId,
+
+        });
+
+      }
+
+      case CHART_TYPE_IDS.COLUMNS:
+
+        return this.chart.addHistogramSeries({
+
+          priceFormat: { type: 'price' },
+
+          priceScaleId,
+
+        });
+
+      case CHART_TYPE_IDS.HIGH_LOW:
+
+        return this.chart.addBarSeries({
+
+          upColor: '#787b86',
+
+          downColor: '#787b86',
+
+          thinBars: true,
+
+          openVisible: false,
+
+          priceScaleId,
+
+        });
+
+      default:
+
+        return this.chart.addCandlestickSeries({
+
+          ...TV_CANDLE_COLORS,
+
+          priceScaleId,
+
+        });
+
+    }
+
+  }
+
+
+
+  getChartType() {
+
+    return this.chartType;
+
+  }
+
+
+
+  setChartType(typeId) {
+
+    const type = String(typeId || '').trim();
+
+    if (!type || type === CHART_TYPE_IDS.FOOTPRINT) return this.chartType;
+
+    if (type === this.chartType) return this.chartType;
+
+
+
+    if (this.candleSeries) {
+
+      this.chart.removeSeries(this.candleSeries);
+
+    }
+
+
+
+    this.chartType = type;
+
+    this.candleSeries = this._createMainSeries(type);
+
+
+
+    if (this._lastCandles.length) {
+
+      this._withRangeLock(() => {
+
+        this.candleSeries.setData(this._seriesDataFromCandles(this._lastCandles));
+
+      });
+
+    }
+
+
+
+    return this.chartType;
+
+  }
+
+
+
+  _legendCandleFromSeriesData(seriesData, time) {
+
+    if (!seriesData) return null;
+
+    if (seriesData.open != null && seriesData.high != null) return seriesData;
+
+    if (seriesData.value != null) {
+
+      const match = this._lastCandles.find((c) => c.time === time);
+
+      if (match) return match;
+
+      const v = seriesData.value;
+
+      return { open: v, high: v, low: v, close: v, volume: null };
+
+    }
+
+    return null;
 
   }
 
@@ -642,7 +1166,13 @@ class DarkPulsrChart {
 
 
 
-      const candleData = param.seriesData.get(this.candleSeries);
+      const candleData = this._legendCandleFromSeriesData(
+
+        param.seriesData.get(this.candleSeries),
+
+        param.time,
+
+      );
 
       if (!candleData) return;
 
@@ -710,13 +1240,7 @@ class DarkPulsrChart {
 
 
 
-    this.candleSeries = this.chart.addCandlestickSeries({
-
-      ...TV_CANDLE_COLORS,
-
-      priceScaleId: 'right',
-
-    });
+    this.candleSeries = this._createMainSeries(this.chartType);
 
 
 
@@ -812,7 +1336,7 @@ class DarkPulsrChart {
 
     if (!normalized || !this._isStreamTimeValid(normalized)) return;
 
-    this.candleSeries.update(normalized);
+    this.candleSeries.update(this._streamUpdateFromCandle(normalized));
 
     if (normalized.volume != null) {
 
@@ -1247,5 +1771,7 @@ window.sanitizeCandles = sanitizeCandles;
 window.normalizeCandle = normalizeCandle;
 
 window.DarkPulsrChart = DarkPulsrChart;
+
+window.CHART_TYPE_IDS = CHART_TYPE_IDS;
 
 

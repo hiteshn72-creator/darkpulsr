@@ -348,6 +348,89 @@
       background: rgba(239, 83, 80, 0.08);
     }
 
+    .dp-toolbar-charttype-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .dp-toolbar-charttype-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      min-width: 220px;
+      max-height: 420px;
+      overflow-y: auto;
+      background: #1e222d;
+      border: 1px solid #363a45;
+      border-radius: 6px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+      z-index: 35;
+      padding: 6px 0;
+    }
+
+    .dp-toolbar-charttype-menu.hidden {
+      display: none;
+    }
+
+    .dp-charttype-divider {
+      height: 1px;
+      margin: 4px 0;
+      background: #363a45;
+    }
+
+    .dp-charttype-item {
+      display: grid;
+      grid-template-columns: 28px 1fr 20px;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      color: #d1d4dc;
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .dp-charttype-item:hover:not(.is-disabled) {
+      background: #2a2e39;
+    }
+
+    .dp-charttype-item.is-active {
+      background: #363a45;
+      color: #ffffff;
+    }
+
+    .dp-charttype-item.is-disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .dp-charttype-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      color: #787b86;
+    }
+
+    .dp-charttype-icon svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .dp-charttype-item.is-active .dp-charttype-icon {
+      color: #d1d4dc;
+    }
+
+    .dp-charttype-star {
+      color: #787b86;
+      font-size: 14px;
+      text-align: center;
+    }
+
     .dp-toolbar-btn {
       display: inline-flex;
       align-items: center;
@@ -1938,8 +2021,8 @@
   <script src="js/symbol-search-modal.js?v=5"></script>
   <script src="js/astro-marker-layer.js?v=9"></script>
   <script src="js/overlay-manager.js?v=8"></script>
-  <script src="js/chart-toolbar.js?v=2"></script>
-  <script src="js/darkpulsr-chart.js?v=12"></script>
+  <script src="js/chart-toolbar.js?v=3"></script>
+  <script src="js/darkpulsr-chart.js?v=13"></script>
   <script>
     const RASHIS = [
       'Mesha', 'Vrishabha', 'Mithuna', 'Karka', 'Simha', 'Kanya',
@@ -2260,11 +2343,15 @@
             symbol: 'BTC',
             symbolLabel: 'BTC/USDT',
             timeframe: '1h',
+            chartType: 'candles',
             statusText: 'Connecting…',
           },
           onSymbolSelect: () => symbolSearchModal?.open(),
           onCompare: () => symbolSearchModal?.openCompare(),
           onCompareRemove: (key) => removeCompareSymbol(key),
+          onChartTypeChange: (typeId) => {
+            darkPulsrChart?.setChartType(typeId);
+          },
           onTimeframeChange: (tf) => changeTimeframe(tf),
           onSettings: () => console.info('[ChartToolbar] Settings opened'),
           onIndicatorAdd: (id) => console.info('[ChartToolbar] Indicator — coming soon:', id),
