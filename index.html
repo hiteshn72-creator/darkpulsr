@@ -334,6 +334,53 @@
       z-index: 2;
     }
 
+    .astro-marker-tooltip {
+      position: absolute;
+      z-index: 10;
+      min-width: 160px;
+      max-width: 240px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: rgba(5, 5, 5, 0.92);
+      border: 1px solid rgba(255, 215, 0, 0.45);
+      box-shadow:
+        0 0 16px rgba(255, 215, 0, 0.2),
+        0 0 24px rgba(157, 78, 221, 0.15);
+      pointer-events: none;
+    }
+
+    .astro-marker-tooltip.hidden {
+      display: none;
+    }
+
+    .astro-tooltip-title {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #FFD700;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    .astro-tooltip-desc {
+      display: block;
+      font-size: 0.6rem;
+      color: rgba(157, 78, 221, 0.9);
+      line-height: 1.35;
+      margin-bottom: 4px;
+    }
+
+    .astro-tooltip-time {
+      display: block;
+      font-size: 0.55rem;
+      color: rgba(0, 240, 255, 0.75);
+      letter-spacing: 0.04em;
+    }
+
+    #darkpulsr-chart-host {
+      position: relative;
+    }
+
     .tf-btn,
     .zoom-btn {
       padding: 6px 12px;
@@ -656,6 +703,7 @@
           <div id="overlay-control-panel" class="overlay-control-panel">
             <span class="panel-label">Astro Overlay</span>
             <button type="button" class="overlay-toggle active" data-overlay="moonChange">Moon Change</button>
+            <button type="button" class="overlay-toggle active" data-overlay="guruIngress">Guru Ingress</button>
             <button type="button" class="overlay-toggle" data-overlay="nextMoonChange">Next Moon Δ</button>
           </div>
 
@@ -763,9 +811,9 @@
   <script src="js/binance-feed.js?v=7"></script>
   <script src="js/yahoo-feed.js?v=7"></script>
   <script src="js/universal-market-data.js?v=7"></script>
-  <script src="js/astro-marker-layer.js?v=7"></script>
-  <script src="js/overlay-manager.js?v=7"></script>
-  <script src="js/darkpulsr-chart.js?v=7"></script>
+  <script src="js/astro-marker-layer.js?v=9"></script>
+  <script src="js/overlay-manager.js?v=8"></script>
+  <script src="js/darkpulsr-chart.js?v=9"></script>
   <script>
     const RASHIS = [
       'Mesha', 'Vrishabha', 'Mithuna', 'Karka', 'Simha', 'Kanya',
@@ -1022,6 +1070,8 @@
         }
         return;
       }
+
+      window.darkPulsrChart = darkPulsrChart;
 
       const overlayManager = new OverlayManager(darkPulsrChart.getMarkerLayer());
       overlayManager.bindControlPanel(document.getElementById('overlay-control-panel'));
