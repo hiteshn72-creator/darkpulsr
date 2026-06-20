@@ -1,5 +1,6 @@
 /**
  * DarkPulsr — Custom overlay canvas (vertical astro markers)
+ * Debounced redraw — does not trigger chart resize loops.
  */
 class AstroMarkerLayer {
   constructor(chart, hostEl) {
@@ -7,23 +8,25 @@ class AstroMarkerLayer {
     this.hostEl = hostEl;
     this.markers = [];
     this.overlayEnabled = {};
+    this._redrawTimer = null;
 
     this.canvas = document.createElement('canvas');
     this.canvas.className = 'astro-marker-canvas';
     this.canvas.setAttribute('aria-hidden', 'true');
     hostEl.appendChild(this.canvas);
 
-    this._onResize = () => this.redraw();
-    this._resizeObserver = new ResizeObserver(this._onResize);
-    this._resizeObserver.observe(hostEl);
+    this._onRangeChange = () => this.redrawDebounced();
+    this._unsubscribeTimeRange = chart.timeScale().subscribeVisibleTimeRangeChange(this._onRangeChange);
+  }
 
-    this._unsubscribeTimeRange = chart.timeScale().subscribeVisibleLogicalRangeChange(this._onResize);
-    window.addEventListener('resize', this._onResize);
+  redrawDebounced() {
+    clearTimeout(this._redrawTimer);
+    this._redrawTimer = setTimeout(() => this.redraw(), 32);
   }
 
   setOverlayEnabled(group, enabled) {
     this.overlayEnabled[group] = enabled;
-    this.redraw();
+    this.redrawDebounced();
   }
 
   addMarker(unixSeconds, options = {}) {
@@ -37,7 +40,7 @@ class AstroMarkerLayer {
       glow: options.glow !== false,
     };
     this.markers.push(marker);
-    this.redraw();
+    this.redrawDebounced();
     return marker.id;
   }
 
@@ -48,7 +51,7 @@ class AstroMarkerLayer {
 
   clearMarkers() {
     this.markers = [];
-    this.redraw();
+    this.redrawDebounced();
   }
 
   redraw() {
@@ -72,7 +75,7 @@ class AstroMarkerLayer {
       if (marker.group && this.overlayEnabled[marker.group] === false) continue;
 
       const x = timeScale.timeToCoordinate(marker.time);
-      if (x === null) continue;
+      if (x === null || !Number.isFinite(x)) continue;
 
       ctx.save();
       ctx.strokeStyle = marker.color;
@@ -103,8 +106,7 @@ class AstroMarkerLayer {
   }
 
   destroy() {
-    this._resizeObserver.disconnect();
-    window.removeEventListener('resize', this._onResize);
+    clearTimeout(this._redrawTimer);
     if (this._unsubscribeTimeRange) this._unsubscribeTimeRange();
     this.canvas.remove();
     this.markers = [];

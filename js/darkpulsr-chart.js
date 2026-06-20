@@ -1,8 +1,8 @@
 /**
  * DarkPulsr Chart Engine — TradingView Lightweight Charts v4+
- * Stable scales, validated data, bounded visible range.
+ * Stable scales, no runaway wheel zoom, validated timestamps.
  */
-const VISIBLE_BAR_COUNT = 96;
+const VISIBLE_BAR_COUNT = 80;
 
 const DARKPULSR_CHART_THEME = {
   layout: {
@@ -19,12 +19,10 @@ const DARKPULSR_CHART_THEME = {
     horzLine: { color: 'rgba(255, 215, 0, 0.55)', labelBackgroundColor: '#FFD700' },
   },
   rightPriceScale: {
+    visible: true,
     borderColor: 'rgba(0, 240, 255, 0.25)',
     autoScale: true,
-    scaleMargins: {
-      top: 0.12,
-      bottom: 0.12,
-    },
+    scaleMargins: { top: 0.1, bottom: 0.1 },
   },
   leftPriceScale: {
     visible: false,
@@ -33,67 +31,96 @@ const DARKPULSR_CHART_THEME = {
     borderColor: 'rgba(255, 215, 0, 0.2)',
     timeVisible: true,
     secondsVisible: false,
-    fixLeftEdge: true,
+    fixLeftEdge: false,
     fixRightEdge: true,
-    rightOffset: 12,
-    barSpacing: 8,
-    minBarSpacing: 2,
+    rightOffset: 8,
+    barSpacing: 10,
+    minBarSpacing: 6,
   },
 };
 
+/** Wheel zoom OFF — stops infinite zoom loop. Use +/- buttons only. */
 const DARKPULSR_CHART_INTERACTION = {
   handleScroll: {
-    mouseWheel: true,
+    mouseWheel: false,
     pressedMouseMove: true,
     horzTouchDrag: true,
-    vertTouchDrag: true,
+    vertTouchDrag: false,
   },
   handleScale: {
-    axisPressedMouseMove: {
-      time: true,
-      price: true,
-    },
-    axisDoubleClickReset: {
-      time: true,
-      price: true,
-    },
-    mouseWheel: true,
-    pinch: true,
+    axisPressedMouseMove: { time: false, price: false },
+    axisDoubleClickReset: { time: false, price: false },
+    mouseWheel: false,
+    pinch: false,
   },
   kineticScroll: {
-    touch: true,
+    touch: false,
     mouse: false,
   },
 };
 
-function isValidCandle(candle) {
-  if (!candle || typeof candle !== 'object') return false;
-
-  const { time, open, high, low, close } = candle;
-  if (![time, open, high, low, close].every((n) => Number.isFinite(n))) return false;
-  if (time <= 0) return false;
-  if (high < low) return false;
-
-  return true;
+function normalizeChartTime(raw) {
+  let time = Math.floor(Number(raw));
+  if (!Number.isFinite(time)) return null;
+  if (time > 1e12) time = Math.floor(time / 1000);
+  const now = Math.floor(Date.now() / 1000);
+  if (time < now - 86400 * 365 * 10 || time > now + 86400 * 2) return null;
+  return time;
 }
 
-function sanitizeCandles(raw) {
+function formatCandleTime(raw, interval) {
+  const unix = normalizeChartTime(raw);
+  if (unix == null) return null;
+  if (interval === '1d') {
+    const d = new Date(unix * 1000);
+    return {
+      year: d.getUTCFullYear(),
+      month: d.getUTCMonth() + 1,
+      day: d.getUTCDate(),
+    };
+  }
+  return unix;
+}
+
+function normalizeCandle(raw, interval = '1h') {
+  if (!raw || typeof raw !== 'object') return null;
+
+  const time = formatCandleTime(raw.time, interval);
+  if (time == null) return null;
+
+  const open = Number(raw.open);
+  const high = Number(raw.high);
+  const low = Number(raw.low);
+  const close = Number(raw.close);
+
+  if (![open, high, low, close].every((n) => Number.isFinite(n))) return null;
+  if (high < low) return null;
+
+  return { time, open, high, low, close };
+}
+
+function isValidCandle(candle) {
+  return normalizeCandle(candle, '1h') !== null || normalizeCandle(candle, '1d') !== null;
+}
+
+function sanitizeCandles(raw, interval = '1h') {
   if (!Array.isArray(raw) || raw.length === 0) return [];
+
+  const key = interval === '1d'
+    ? (c) => `${c.time.year}-${c.time.month}-${c.time.day}`
+    : (c) => String(c.time);
 
   const byTime = new Map();
 
-  for (const candle of raw) {
-    if (!isValidCandle(candle)) continue;
-    byTime.set(candle.time, {
-      time: candle.time,
-      open: candle.open,
-      high: candle.high,
-      low: candle.low,
-      close: candle.close,
-    });
+  for (const row of raw) {
+    const candle = normalizeCandle(row, interval);
+    if (!candle) continue;
+    byTime.set(key(candle), candle);
   }
 
-  return Array.from(byTime.values()).sort((a, b) => a.time - b.time);
+  const sorted = Array.from(byTime.values());
+  if (interval === '1d') return sorted;
+  return sorted.sort((a, b) => a.time - b.time);
 }
 
 class DarkPulsrChart {
@@ -111,6 +138,9 @@ class DarkPulsrChart {
     this.spinnerEl = options.spinnerEl || null;
     this.loadRequestId = 0;
     this._resizeTimer = null;
+    this._lastWidth = 0;
+    this._lastHeight = 0;
+    this._lastCandles = [];
 
     this._buildChart();
     this.markerLayer = new AstroMarkerLayer(this.chart, this.host);
@@ -140,6 +170,9 @@ class DarkPulsrChart {
   _resizeChart() {
     if (!this.chart) return;
     const { width, height } = this._hostSize();
+    if (width === this._lastWidth && height === this._lastHeight) return;
+    this._lastWidth = width;
+    this._lastHeight = height;
     this.chart.applyOptions({ width, height });
     this.markerLayer?.redraw();
   }
@@ -147,12 +180,25 @@ class DarkPulsrChart {
   _setInitialVisibleRange(candles) {
     if (!candles.length) return;
 
-    const total = candles.length;
-    const visible = Math.min(VISIBLE_BAR_COUNT, total);
-    const from = Math.max(0, total - visible);
-    const to = total - 1;
+    const slice = candles.slice(-VISIBLE_BAR_COUNT);
+    const from = slice[0].time;
+    const to = slice[slice.length - 1].time;
+    const timeScale = this.chart.timeScale();
 
-    this.chart.timeScale().setVisibleLogicalRange({ from, to });
+    timeScale.applyOptions({
+      fixLeftEdge: false,
+      fixRightEdge: true,
+      barSpacing: 10,
+      minBarSpacing: 6,
+      rightOffset: 8,
+    });
+
+    if (this.interval === '1d') {
+      timeScale.setVisibleRange({ from, to });
+    } else {
+      const pad = Math.max(3600, Math.floor((to - from) / slice.length));
+      timeScale.setVisibleRange({ from, to: to + pad });
+    }
   }
 
   _buildChart() {
@@ -161,6 +207,8 @@ class DarkPulsrChart {
     }
 
     const { width, height } = this._hostSize();
+    this._lastWidth = width;
+    this._lastHeight = height;
 
     this.chart = LightweightCharts.createChart(this.host, {
       ...DARKPULSR_CHART_THEME,
@@ -172,15 +220,15 @@ class DarkPulsrChart {
     this.chart.priceScale('right').applyOptions({
       autoScale: true,
       borderColor: 'rgba(0, 240, 255, 0.25)',
-      scaleMargins: { top: 0.12, bottom: 0.12 },
+      scaleMargins: { top: 0.1, bottom: 0.1 },
     });
 
     this.chart.timeScale().applyOptions({
-      fixLeftEdge: true,
+      fixLeftEdge: false,
       fixRightEdge: true,
-      rightOffset: 12,
-      barSpacing: 8,
-      minBarSpacing: 2,
+      rightOffset: 8,
+      barSpacing: 10,
+      minBarSpacing: 6,
       timeVisible: true,
       secondsVisible: false,
     });
@@ -193,15 +241,25 @@ class DarkPulsrChart {
       wickUpColor: '#4ade80',
       wickDownColor: '#f87171',
       priceScaleId: 'right',
+      autoscaleInfoProvider: (original) => {
+        const info = original();
+        if (!info || !info.priceRange) return info;
+        const { minValue, maxValue } = info.priceRange;
+        const pad = (maxValue - minValue) * 0.06 || 1;
+        return {
+          priceRange: {
+            minValue: minValue - pad,
+            maxValue: maxValue + pad,
+          },
+        };
+      },
     });
-
-    requestAnimationFrame(() => this._resizeChart());
   }
 
   _bindResize() {
     this._resizeObserver = new ResizeObserver(() => {
       clearTimeout(this._resizeTimer);
-      this._resizeTimer = setTimeout(() => this._resizeChart(), 120);
+      this._resizeTimer = setTimeout(() => this._resizeChart(), 150);
     });
     this._resizeObserver.observe(this.host);
   }
@@ -222,14 +280,23 @@ class DarkPulsrChart {
     return cfg.label || symbolKey;
   }
 
+  _onStreamCandle(candle, requestId) {
+    if (requestId !== this.loadRequestId) return;
+
+    const normalized = normalizeCandle(candle, this.interval);
+    if (!normalized) return;
+
+    this.candleSeries.update(normalized);
+  }
+
   async loadSymbol(symbolKey, interval = this.interval) {
     const requestId = ++this.loadRequestId;
 
     this._closeStream();
     this.symbol = symbolKey;
     this.interval = interval;
+    this._lastCandles = [];
 
-    this.candleSeries.setData([]);
     this._showSpinner(true);
     this._setStatus(`Fetching ${symbolKey}…`);
 
@@ -237,23 +304,22 @@ class DarkPulsrChart {
       const raw = await this.feed.fetchKlines(symbolKey, interval);
       if (requestId !== this.loadRequestId) return;
 
-      const candles = sanitizeCandles(raw);
+      const candles = sanitizeCandles(raw, interval);
       if (!candles.length) {
         throw new Error(`No valid candle data for ${symbolKey}`);
       }
 
+      this._lastCandles = candles;
       this.candleSeries.setData(candles);
       this._setInitialVisibleRange(candles);
       this.chart.priceScale('right').applyOptions({ autoScale: true });
       this._setStatus(this._statusLabel(symbolKey));
 
       this.stream = this.feed.subscribe(symbolKey, interval, (candle) => {
-        if (requestId !== this.loadRequestId) return;
-        if (!isValidCandle(candle)) return;
-        this.candleSeries.update(candle);
+        this._onStreamCandle(candle, requestId);
       });
 
-      this.markerLayer?.redraw();
+      requestAnimationFrame(() => this.markerLayer?.redraw());
     } catch (error) {
       if (requestId !== this.loadRequestId) return;
       console.error('[DarkPulsrChart]', error);
@@ -280,27 +346,31 @@ class DarkPulsrChart {
   }
 
   zoomIn() {
-    this._applyZoom(0.72);
+    this._applyZoom(0.75);
   }
 
   zoomOut() {
-    this._applyZoom(1.38);
+    this._applyZoom(1.33);
   }
 
   _applyZoom(factor) {
     const timeScale = this.chart.timeScale();
-    const range = timeScale.getVisibleLogicalRange();
-    if (!range || !Number.isFinite(range.from) || !Number.isFinite(range.to)) return;
+    const range = timeScale.getVisibleRange();
+    if (!range || range.from == null || range.to == null) return;
 
-    const span = range.to - range.from;
-    if (span <= 5) return;
+    const fromSec = typeof range.from === 'number' ? range.from : null;
+    const toSec = typeof range.to === 'number' ? range.to : null;
+    if (fromSec == null || toSec == null) return;
 
-    const center = (range.from + range.to) / 2;
-    const newHalfSpan = Math.max(5, (span / 2) * factor);
+    const span = toSec - fromSec;
+    if (span <= 60) return;
 
-    timeScale.setVisibleLogicalRange({
-      from: center - newHalfSpan,
-      to: center + newHalfSpan,
+    const center = (fromSec + toSec) / 2;
+    const half = Math.max(span * 0.25, 3600) * factor;
+
+    timeScale.setVisibleRange({
+      from: center - half,
+      to: center + half,
     });
     this.markerLayer?.redraw();
   }
@@ -322,4 +392,5 @@ class DarkPulsrChart {
 window.DARKPULSR_CHART_THEME = DARKPULSR_CHART_THEME;
 window.DARKPULSR_CHART_INTERACTION = DARKPULSR_CHART_INTERACTION;
 window.sanitizeCandles = sanitizeCandles;
+window.normalizeCandle = normalizeCandle;
 window.DarkPulsrChart = DarkPulsrChart;
