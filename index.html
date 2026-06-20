@@ -155,6 +155,13 @@
       -webkit-backdrop-filter: blur(6px);
     }
 
+    .tv-panel-wrap.neon-panel {
+      border-color: #2a2e39;
+      box-shadow: none;
+      background: #131722;
+      backdrop-filter: none;
+    }
+
     .site-footer {
       text-align: center;
       padding: 12px 16px;
@@ -220,18 +227,334 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      border-radius: 4px;
-      min-height: 480px;
-      height: clamp(420px, 52vh, 680px);
+      border-radius: 0;
+      min-height: 520px;
+      height: clamp(480px, 58vh, 780px);
       flex: 1;
+      background: #131722;
+      border: 1px solid #2a2e39;
+    }
+
+    .tv-topbar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 6px 10px;
+      background: #1e222d;
+      border-bottom: 1px solid #2a2e39;
+      flex-shrink: 0;
+    }
+
+    .tv-symbol-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+      max-width: 280px;
+    }
+
+    .tv-symbol-btn:hover {
+      background: #2a2e39;
+    }
+
+    .tv-symbol-btn-icon {
+      width: 16px;
+      height: 16px;
+      color: #787b86;
+      flex-shrink: 0;
+    }
+
+    .tv-symbol-btn-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .tv-symbol-code {
+      font-size: 14px;
+      font-weight: 600;
+      color: #d1d4dc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tv-symbol-name {
+      font-size: 11px;
+      color: #787b86;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tv-intervals {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-left: 4px;
+      padding-left: 8px;
+      border-left: 1px solid #2a2e39;
+    }
+
+    .tv-interval,
+    .tf-btn {
+      padding: 4px 8px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      letter-spacing: 0;
+      text-transform: none;
+      border-radius: 4px;
+      border: none;
+      background: transparent;
+      color: #787b86;
+      cursor: pointer;
+      transition: color 0.15s ease, background 0.15s ease;
+    }
+
+    .tv-interval:hover,
+    .tf-btn:hover {
+      color: #d1d4dc;
+      background: #2a2e39;
+      box-shadow: none;
+    }
+
+    .tv-interval.active,
+    .tf-btn.active {
+      color: #2962ff;
+      background: rgba(41, 98, 255, 0.12);
+      border: none;
+      box-shadow: none;
+    }
+
+    .tv-toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+    }
+
+    .tv-action-btn {
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
+      color: #787b86;
+      cursor: pointer;
+    }
+
+    .tv-action-btn:hover {
+      background: #2a2e39;
+      color: #d1d4dc;
+    }
+
+    .tv-action-btn.active {
+      color: #2962ff;
+      background: rgba(41, 98, 255, 0.12);
+    }
+
+    #chart-status {
+      font-size: 11px;
+      color: #787b86;
+      margin-left: 8px;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    #chart-status.error {
+      color: #ef5350;
+    }
+
+    .tv-legend {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 4px 12px;
+      background: #131722;
+      border-bottom: 1px solid #2a2e39;
+      font-size: 12px;
+      color: #787b86;
+      flex-shrink: 0;
+    }
+
+    .tv-legend-symbol {
+      font-weight: 600;
+      color: #d1d4dc;
+      margin-right: 4px;
+    }
+
+    .tv-legend-item {
+      display: inline-flex;
+      gap: 4px;
+    }
+
+    .tv-legend-item span:first-child {
+      color: #787b86;
+    }
+
+    .tv-legend-item span:last-child {
+      color: #d1d4dc;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tv-legend-change {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tv-legend-change.tv-up { color: #26a69a; }
+    .tv-legend-change.tv-down { color: #ef5350; }
+
+    .tv-watchlist-panel {
+      max-height: 120px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 6px 10px;
+      background: #1e222d;
+      border-bottom: 1px solid #2a2e39;
+      flex-shrink: 0;
+    }
+
+    .tv-watchlist-panel.collapsed {
+      display: none;
+    }
+
+    .tv-watchlist-panel .panel-label {
+      color: #787b86;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-shadow: none;
+    }
+
+    .tv-watchlist-panel .symbol-btn {
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+      border-radius: 4px;
+      border: none;
+      background: #2a2e39;
+      color: #787b86;
+      font-family: inherit;
+    }
+
+    .tv-watchlist-panel .symbol-btn:hover {
+      color: #d1d4dc;
+      background: #363a45;
+      box-shadow: none;
+    }
+
+    .tv-watchlist-panel .symbol-btn.active {
+      color: #2962ff;
+      background: rgba(41, 98, 255, 0.18);
+      box-shadow: none;
+    }
+
+    .tv-chart-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      position: relative;
+    }
+
+    .tv-left-rail {
+      width: 52px;
+      flex-shrink: 0;
+      background: #1e222d;
+      border-right: 1px solid #2a2e39;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0;
+      gap: 4px;
+    }
+
+    .tv-rail-btn {
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
+      color: #787b86;
+      cursor: default;
+      font-size: 14px;
+    }
+
+    .tv-rail-btn.active {
+      color: #2962ff;
+      background: rgba(41, 98, 255, 0.12);
+    }
+
+    .tv-chart-main {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      position: relative;
     }
 
     #darkpulsr-chart-host {
       position: relative;
       flex: 1 1 auto;
-      min-height: 400px;
+      min-height: 360px;
       width: 100%;
-      height: 100%;
+    }
+
+    .tv-footer {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 4px 10px;
+      background: #1e222d;
+      border-top: 1px solid #2a2e39;
+      flex-shrink: 0;
+    }
+
+    .tv-footer .overlay-toggle {
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+      border-radius: 4px;
+      border: none;
+      background: #2a2e39;
+      color: #787b86;
+      font-family: inherit;
+    }
+
+    .tv-footer .overlay-toggle:hover {
+      color: #d1d4dc;
+      box-shadow: none;
+    }
+
+    .tv-footer .overlay-toggle.active {
+      color: #2962ff;
+      background: rgba(41, 98, 255, 0.18);
+      box-shadow: none;
+    }
+
+    .tv-footer .panel-label {
+      font-size: 11px;
+      color: #787b86;
+      text-shadow: none;
+      letter-spacing: 0.04em;
     }
 
     .chart-loading-overlay {
@@ -242,9 +565,7 @@
       justify-content: center;
       flex-direction: column;
       gap: 10px;
-      background: rgba(5, 5, 5, 0.72);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      background: rgba(19, 23, 34, 0.85);
       z-index: 6;
       pointer-events: none;
     }
@@ -256,18 +577,17 @@
     .chart-spinner {
       width: 36px;
       height: 36px;
-      border: 3px solid rgba(157, 78, 221, 0.25);
-      border-top-color: #FFD700;
+      border: 3px solid rgba(42, 46, 57, 0.8);
+      border-top-color: #2962ff;
       border-radius: 50%;
       animation: chart-spin 0.85s linear infinite;
-      box-shadow: 0 0 16px rgba(255, 215, 0, 0.25);
     }
 
     .chart-loading-text {
-      font-size: 0.6rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: rgba(0, 240, 255, 0.85);
+      font-size: 12px;
+      color: #787b86;
+      letter-spacing: 0;
+      text-transform: none;
     }
 
     @keyframes chart-spin {
@@ -1123,56 +1443,81 @@
         <button id="astro-alert-dismiss" class="astro-alert-dismiss" type="button" aria-label="Dismiss alert">&#10005;</button>
       </div>
 
-      <div class="flex flex-col flex-1 min-h-[520px] shrink-0 w-full neon-panel">
-        <p class="viewport-label">// DARKPULSR GLOBAL TERMINAL · UNIVERSAL MARKET DATA</p>
+      <div class="flex flex-col flex-1 min-h-[520px] shrink-0 w-full neon-panel tv-panel-wrap">
         <div
           id="darkpulsr-chart-container"
           class="w-full flex-1 flex flex-col overflow-hidden min-h-[480px]"
         >
-          <div class="chart-toolbar">
-            <button type="button" id="chart-symbol-trigger" class="chart-symbol-trigger" title="Symbol search (Ctrl+K)">
-              <svg class="chart-symbol-trigger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <div class="tv-topbar">
+            <button type="button" id="chart-symbol-trigger" class="tv-symbol-btn" title="Symbol search (Ctrl+K)">
+              <svg class="tv-symbol-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <circle cx="11" cy="11" r="7"></circle>
                 <path d="M20 20l-4-4"></path>
               </svg>
-              <span class="chart-symbol-trigger-text">
-                <span id="chart-symbol-code" class="chart-symbol-code">BTCUSD</span>
-                <span id="chart-symbol-name" class="chart-symbol-name">Bitcoin / U.S. dollar</span>
+              <span class="tv-symbol-btn-text">
+                <span id="chart-symbol-code" class="tv-symbol-code">BTCUSD</span>
+                <span id="chart-symbol-name" class="tv-symbol-name">Bitcoin / U.S. dollar</span>
               </span>
-              <span class="chart-symbol-kbd">Ctrl+K</span>
             </button>
 
-            <div id="symbol-toolbar-mount" class="symbol-toolbar-mount"></div>
+            <div class="tv-intervals">
+              <button type="button" class="tv-interval tf-btn" data-interval="1m">1m</button>
+              <button type="button" class="tv-interval tf-btn" data-interval="5m">5m</button>
+              <button type="button" class="tv-interval tf-btn" data-interval="15m">15m</button>
+              <button type="button" class="tv-interval tf-btn active" data-interval="1h">1H</button>
+              <button type="button" class="tv-interval tf-btn" data-interval="4h">4H</button>
+              <button type="button" class="tv-interval tf-btn" data-interval="1d">D</button>
+              <button type="button" class="tv-interval tf-btn" data-interval="1w">W</button>
+            </div>
 
-            <span class="panel-label" style="margin-left: 10px;">TF</span>
-            <button type="button" class="tf-btn" data-interval="5m">5M</button>
-            <button type="button" class="tf-btn active" data-interval="1h">1H</button>
-            <button type="button" class="tf-btn" data-interval="1d">1D</button>
-
-            <span id="chart-status">Connecting…</span>
-          </div>
-
-          <p id="chart-feed-note" class="chart-feed-note">Yahoo via Render API · Crypto Binance live · Ctrl+K search any symbol</p>
-
-          <div id="darkpulsr-chart-host" class="flex-1 min-h-0">
-            <div id="chart-loading-overlay" class="chart-loading-overlay" aria-hidden="true">
-              <div class="chart-spinner"></div>
-              <span class="chart-loading-text">Fetching market data…</span>
+            <div class="tv-toolbar-actions">
+              <button type="button" id="tv-watchlist-toggle" class="tv-action-btn">Markets</button>
+              <button type="button" id="zoom-out" class="tv-action-btn" aria-label="Zoom out">−</button>
+              <button type="button" id="zoom-in" class="tv-action-btn" aria-label="Zoom in">+</button>
+              <span id="chart-status">Connecting…</span>
             </div>
           </div>
 
-          <div id="overlay-control-panel" class="overlay-control-panel">
-            <span class="panel-label">Astro Overlay</span>
-            <button type="button" class="overlay-toggle active" data-overlay="moonChange">Moon Change</button>
-            <button type="button" class="overlay-toggle active" data-overlay="guruIngress">Guru Ingress</button>
-            <button type="button" class="overlay-toggle" data-overlay="nextMoonChange">Next Moon Δ</button>
+          <div id="tv-legend" class="tv-legend">
+            <span class="tv-legend-symbol" data-legend-symbol>BTC/USDT</span>
+            <span class="tv-legend-item"><span>O</span><span data-legend-o>—</span></span>
+            <span class="tv-legend-item"><span>H</span><span data-legend-h>—</span></span>
+            <span class="tv-legend-item"><span>L</span><span data-legend-l>—</span></span>
+            <span class="tv-legend-item"><span>C</span><span data-legend-c>—</span></span>
+            <span class="tv-legend-change" data-legend-change>—</span>
+            <span class="tv-legend-item"><span>Vol</span><span data-legend-vol>—</span></span>
           </div>
 
-          <div class="zoom-control-panel">
-            <span class="panel-label">Zoom</span>
-            <button type="button" id="zoom-in" class="zoom-btn" aria-label="Zoom in">+</button>
-            <button type="button" id="zoom-out" class="zoom-btn" aria-label="Zoom out">−</button>
-            <span class="panel-label" style="margin-left: 8px; opacity: 0.6;">Use +/- buttons to zoom · Drag to pan</span>
+          <div id="tv-watchlist-panel" class="tv-watchlist-panel collapsed">
+            <div id="symbol-toolbar-mount" class="symbol-toolbar-mount"></div>
+          </div>
+
+          <div class="tv-chart-body">
+            <aside class="tv-left-rail" aria-label="Drawing tools">
+              <button type="button" class="tv-rail-btn active" title="Cursor">↖</button>
+              <button type="button" class="tv-rail-btn" title="Trend line">╱</button>
+              <button type="button" class="tv-rail-btn" title="Fibonacci">φ</button>
+              <button type="button" class="tv-rail-btn" title="Text">T</button>
+              <button type="button" class="tv-rail-btn" title="Measure">⌗</button>
+            </aside>
+
+            <div class="tv-chart-main">
+              <div id="darkpulsr-chart-host" class="flex-1 min-h-0">
+                <div id="chart-loading-overlay" class="chart-loading-overlay" aria-hidden="true">
+                  <div class="chart-spinner"></div>
+                  <span class="chart-loading-text">Loading…</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tv-footer">
+            <span class="panel-label">Astro</span>
+            <div id="overlay-control-panel" class="overlay-control-panel" style="display:contents;border:none;background:transparent;padding:0;">
+              <button type="button" class="overlay-toggle active" data-overlay="moonChange">Moon Change</button>
+              <button type="button" class="overlay-toggle active" data-overlay="guruIngress">Guru Ingress</button>
+              <button type="button" class="overlay-toggle" data-overlay="nextMoonChange">Next Moon Δ</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1297,6 +1642,7 @@
       <div class="symbol-search-filters">
         <select class="symbol-search-select" data-filter-source aria-label="Filter by source">
           <option value="all">All sources</option>
+          <option value="catalog">DarkPulsr Markets</option>
           <option value="yahoo">Yahoo Finance</option>
           <option value="coingecko">CoinGecko</option>
         </select>
@@ -1345,13 +1691,13 @@
       }
     })();
   </script>
-  <script src="js/binance-feed.js?v=7"></script>
-  <script src="js/yahoo-feed.js?v=13"></script>
+  <script src="js/binance-feed.js?v=8"></script>
+  <script src="js/yahoo-feed.js?v=14"></script>
   <script src="js/universal-market-data.js?v=15"></script>
-  <script src="js/symbol-search-modal.js?v=2"></script>
+  <script src="js/symbol-search-modal.js?v=3"></script>
   <script src="js/astro-marker-layer.js?v=9"></script>
   <script src="js/overlay-manager.js?v=8"></script>
-  <script src="js/darkpulsr-chart.js?v=10"></script>
+  <script src="js/darkpulsr-chart.js?v=11"></script>
   <script>
     const RASHIS = [
       'Mesha', 'Vrishabha', 'Mithuna', 'Karka', 'Simha', 'Kanya',
@@ -1599,6 +1945,7 @@
           interval: '1h',
           statusEl: chartStatus,
           spinnerEl: document.getElementById('chart-loading-overlay'),
+          legendEl: document.getElementById('tv-legend'),
         });
       } catch (error) {
         console.error('[DarkPulsr] Chart boot failed:', error);
@@ -1697,6 +2044,15 @@
           symbolSearchModal.open();
         }
       });
+
+      const watchlistToggle = document.getElementById('tv-watchlist-toggle');
+      const watchlistPanel = document.getElementById('tv-watchlist-panel');
+      if (watchlistToggle && watchlistPanel) {
+        watchlistToggle.addEventListener('click', () => {
+          watchlistPanel.classList.toggle('collapsed');
+          watchlistToggle.classList.toggle('active');
+        });
+      }
 
       selectChartSymbol('BTC');
 

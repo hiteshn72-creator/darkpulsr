@@ -18,6 +18,7 @@ const YahooFeed = {
     '1h':  { interval: '1h',  range: '1mo' },
     '4h':  { interval: '1h',  range: '3mo' },
     '1d':  { interval: '1d',  range: '1y' },
+    '1w':  { interval: '1wk', range: '5y' },
   },
 
   /** Base URL for proxy API. Empty string = same origin (node server.js). */
@@ -132,15 +133,18 @@ const YahooFeed = {
       const high = quotes.high[i];
       const low = quotes.low[i];
       const close = quotes.close[i];
+      const volume = quotes.volume?.[i];
       if (open == null || high == null || low == null || close == null) continue;
 
-      candles.push({
+      const candle = {
         time: result.timestamp[i],
         open,
         high,
         low,
         close,
-      });
+      };
+      if (volume != null && Number.isFinite(volume)) candle.volume = volume;
+      candles.push(candle);
     }
 
     if (!candles.length) {

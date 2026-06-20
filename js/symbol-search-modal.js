@@ -91,6 +91,108 @@
     return sym;
   }
 
+  const PILL_CATALOG_CATEGORY = {
+    crypto: 'crypto',
+    indices: 'index',
+    forex: 'forex',
+    futures: 'commodity',
+  };
+
+  const API_ONLY_PILLS = new Set(['stocks', 'funds', 'bonds', 'options']);
+
+  function catalogToSearchItem(key, cfg) {
+    const quoteTypes = {
+      crypto: 'CRYPTOCURRENCY',
+      index: 'INDEX',
+      commodity: 'FUTURE',
+      forex: 'CURRENCY',
+    };
+    const tvSymbol = cfg.category === 'forex'
+      ? (cfg.shortLabel || key)
+      : formatTvSymbol(cfg.exchange, cfg.yahoo || cfg.shortLabel || key);
+
+    return {
+      source: 'catalog',
+      chartKey: key,
+      symbol: tvSymbol,
+      displayName: cfg.label,
+      quoteType: quoteTypes[cfg.category] || 'INDEX',
+      typeTags: [cfg.category, String(cfg.exchange || '').toLowerCase()].filter(Boolean),
+      exchange: cfg.exchange || 'Yahoo',
+      iconText: String(cfg.shortLabel || key).slice(0, 2).toUpperCase(),
+      yahoo: cfg.yahoo || key,
+      binance: cfg.binance,
+      category: cfg.category,
+      live: !!cfg.live,
+    };
+  }
+
+  function getAllCatalogItems() {
+    const catalog = window.SYMBOL_CATALOG || {};
+    return Object.keys(catalog).map((key) => catalogToSearchItem(key, catalog[key]));
+  }
+
+  function getCatalogItemsForPill(activeCategory) {
+    if (API_ONLY_PILLS.has(activeCategory)) return [];
+    const filterCat = PILL_CATALOG_CATEGORY[activeCategory];
+    const items = getAllCatalogItems();
+    if (!filterCat) return items;
+    return items.filter((item) => item.category === filterCat);
+  }
+
+  function matchesCatalogQuery(item, query) {
+    const q = String(query || '').trim().toLowerCase();
+    if (!q) return true;
+    const hay = [
+      item.chartKey,
+      item.symbol,
+      item.displayName,
+      item.yahoo,
+      item.exchange,
+      ...(item.typeTags || []),
+    ].join(' ').toLowerCase();
+    const tokens = q.split(/\s+/).filter(Boolean);
+    return tokens.every((token) => hay.includes(token));
+  }
+
+  function searchCatalog(query, activeCategory) {
+    return getCatalogItemsForPill(activeCategory).filter((item) => matchesCatalogQuery(item, query));
+  }
+
+  function getCatalogGroups(query, activeCategory) {
+    const groups = window.TOOLBAR_GROUPS || [];
+    const catalog = window.SYMBOL_CATALOG || {};
+    const filterCat = PILL_CATALOG_CATEGORY[activeCategory];
+    const q = String(query || '').trim();
+
+    return groups.map((group) => {
+      const items = group.keys
+        .filter((key) => catalog[key])
+        .map((key) => catalogToSearchItem(key, catalog[key]))
+        .filter((item) => {
+          if (filterCat && item.category !== filterCat) return false;
+          return matchesCatalogQuery(item, q);
+        });
+      return { label: group.label, items };
+    }).filter((group) => group.items.length > 0);
+  }
+
+  function mergeSearchResults(primary, secondary) {
+    const seen = new Set();
+    const merged = [];
+    [...primary, ...secondary].forEach((item) => {
+      const id = String(item.chartKey || '').toUpperCase();
+      if (!id || seen.has(id)) return;
+      seen.add(id);
+      merged.push(item);
+    });
+    return merged;
+  }
+
+  function shouldFetchRemote(activeCategory) {
+    return !API_ONLY_PILLS.has(activeCategory) || activeCategory === 'all';
+  }
+
   function loadRecent() {
     try {
       const raw = localStorage.getItem(RECENT_KEY);
@@ -383,49 +485,53 @@
       this.currentQuery = q;
       const token = ++this.searchToken;
 
+      const catalogHits = searchCatalog(q, this.activeCategory);
+
       if (!q) {
-        this.results = [];
+        this.results = catalogHits;
+        if (this.activeIndex < 0 && catalogHits.length) this.activeIndex = 0;
+        this._updateExchangeOptions();
         this._renderResults();
-        this._setStatus('Start typing to search · Recent & popular below');
+        this._setStatus(`${catalogHits.length} DarkPulsr markets · type to filter`);
         return;
       }
 
-      this._setStatus('Searching…');
+      this.results = catalogHits;
+      this._renderResults();
+      this._setStatus(catalogHits.length ? `${catalogHits.length} local matches…` : 'Searching…');
       this.els.results?.classList.add('is-loading');
 
       try {
-        let items = [];
+        let remoteItems = [];
 
         if (this.activeCategory === 'crypto') {
-          items = await fetchCoinGecko(q);
+          remoteItems = await fetchCoinGecko(q);
         } else if (this.activeCategory === 'all') {
           const [yahooItems, cryptoItems] = await Promise.all([
             fetchYahoo(q, 'all').catch(() => []),
             fetchCoinGecko(q).catch(() => []),
           ]);
-          const seen = new Set();
-          items = [...yahooItems, ...cryptoItems].filter((item) => {
-            const key = `${item.source}:${item.chartKey}`;
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-          });
+          remoteItems = mergeSearchResults(yahooItems, cryptoItems);
+        } else if (!API_ONLY_PILLS.has(this.activeCategory)) {
+          remoteItems = await fetchYahoo(q, this.activeCategory).catch(() => []);
         } else {
-          items = await fetchYahoo(q, this.activeCategory);
+          remoteItems = await fetchYahoo(q, this.activeCategory).catch(() => []);
         }
 
         if (token !== this.searchToken) return;
-        this.results = items;
-        if (this.activeIndex < 0 && items.length) this.activeIndex = 0;
+        this.results = mergeSearchResults(catalogHits, remoteItems);
+        if (this.activeIndex < 0 && this.results.length) this.activeIndex = 0;
         this._updateExchangeOptions();
         this._renderResults();
-        this._setStatus(items.length ? `${items.length} symbols` : 'No matches — try another keyword');
+        this._setStatus(this.results.length ? `${this.results.length} symbols` : 'No matches — try NIFTY, CRUDE, EURUSD');
       } catch (error) {
         if (token !== this.searchToken) return;
         console.warn('[SymbolSearch]', error);
-        this.results = [];
+        this.results = catalogHits;
         this._renderResults();
-        const msg = window.YahooFeed?.userMessage?.(error) || 'Search failed — check connection';
+        const msg = catalogHits.length
+          ? `${catalogHits.length} local matches`
+          : (window.YahooFeed?.userMessage?.(error) || 'Search failed — check connection');
         this._setStatus(msg);
       } finally {
         if (token === this.searchToken) {
@@ -456,7 +562,11 @@
     _filteredResults() {
       return this.results.filter((item) => {
         if (this.sourceFilter !== 'all') {
-          const sourceLabel = item.source === 'coingecko' ? 'coingecko' : 'yahoo';
+          const sourceLabel = item.source === 'coingecko'
+            ? 'coingecko'
+            : item.source === 'catalog'
+              ? 'catalog'
+              : 'yahoo';
           if (sourceLabel !== this.sourceFilter) return false;
         }
         if (this.typeFilter !== 'all' && item.quoteType !== this.typeFilter) return false;
@@ -467,13 +577,19 @@
 
     _buildDisplayList() {
       if (this.currentQuery.trim()) {
-        return this._filteredResults();
+        return { mode: 'flat', items: this._filteredResults() };
       }
 
       const recent = loadRecent();
       const recentKeys = new Set(recent.map((r) => r.chartKey));
-      const popular = POPULAR.filter((p) => !recentKeys.has(p.chartKey));
-      return { recent, popular };
+      const catalogGroups = getCatalogGroups('', this.activeCategory)
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => !recentKeys.has(item.chartKey)),
+        }))
+        .filter((group) => group.items.length > 0);
+
+      return { mode: 'grouped', recent, catalogGroups };
     }
 
     _renderRow(item, index, query) {
@@ -519,7 +635,7 @@
         }
         html = this.displayItems.map((item, i) => this._renderRow(item, i, q)).join('');
       } else {
-        const { recent, popular } = this._buildDisplayList();
+        const { recent, catalogGroups } = this._buildDisplayList();
         let idx = 0;
 
         if (recent.length) {
@@ -532,18 +648,18 @@
           html += '</div>';
         }
 
-        if (popular.length) {
-          html += '<div class="symbol-search-section"><div class="symbol-search-section-title">Popular</div>';
-          popular.forEach((item) => {
+        catalogGroups.forEach((group) => {
+          html += `<div class="symbol-search-section"><div class="symbol-search-section-title">${escapeHtml(group.label)}</div>`;
+          group.items.forEach((item) => {
             html += this._renderRow(item, idx, q);
             this.displayItems.push(item);
             idx += 1;
           });
           html += '</div>';
-        }
+        });
 
         if (!html) {
-          list.innerHTML = '<div class="symbol-search-empty">Type a symbol or company name to begin</div>';
+          list.innerHTML = '<div class="symbol-search-empty">Type a symbol — e.g. NIFTY, CRUDE, NAT GAS, EURUSD</div>';
           return;
         }
       }
@@ -577,6 +693,8 @@
           icon: item.iconUrl,
           exchange: item.exchange,
         });
+      } else if (item.source === 'catalog' || window.UniversalMarketData?.catalog?.[item.chartKey]) {
+        /* catalog symbols already in SYMBOL_CATALOG — chartKey loads directly */
       } else if (item.source === 'yahoo' || item.yahoo) {
         window.UniversalMarketData?.registerDynamic({
           id: String(item.chartKey).toUpperCase(),
@@ -586,13 +704,11 @@
           live: false,
           exchange: item.exchange,
         });
-      } else if (window.UniversalMarketData?.catalog?.[item.chartKey]) {
-        /* catalog entry — already registered */
       } else if (window.UniversalMarketData) {
         window.UniversalMarketData.registerDynamic({
           id: item.chartKey,
           label: item.displayName,
-          yahoo: window.UniversalMarketData.catalog[item.chartKey]?.yahoo || item.chartKey,
+          yahoo: item.yahoo || item.chartKey,
           category: item.category || 'custom',
           live: false,
           exchange: item.exchange,

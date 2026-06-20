@@ -20,6 +20,7 @@ const BinanceFeed = {
       high: parseFloat(row[2]),
       low: parseFloat(row[3]),
       close: parseFloat(row[4]),
+      volume: parseFloat(row[5]),
     }));
   },
 
@@ -38,6 +39,7 @@ const BinanceFeed = {
         high: parseFloat(k.h),
         low: parseFloat(k.l),
         close: parseFloat(k.c),
+        volume: parseFloat(k.v),
       });
     };
 
