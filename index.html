@@ -22,28 +22,137 @@
   <style>
     body {
       background-color: #050505;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
 
     .site-header {
-      background: rgba(5, 5, 5, 0.9);
+      background: rgba(5, 5, 5, 0.95);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
-      border-bottom: 1px solid rgba(255, 215, 0, 0.25);
+      border-bottom: 1px solid rgba(0, 240, 255, 0.35);
       box-shadow:
-        0 0 18px rgba(255, 215, 0, 0.1),
-        0 4px 30px rgba(0, 0, 0, 0.5);
+        0 0 20px rgba(0, 240, 255, 0.12),
+        0 4px 30px rgba(0, 0, 0, 0.6);
     }
 
     .brand-title {
-      font-size: 1.35rem;
+      font-size: 1.25rem;
       font-weight: 700;
-      letter-spacing: 0.22em;
+      letter-spacing: 0.28em;
       color: #FFD700;
-      text-shadow: 0 0 14px rgba(255, 215, 0, 0.45);
+      text-shadow:
+        0 0 10px rgba(255, 215, 0, 0.6),
+        0 0 24px rgba(0, 240, 255, 0.25);
     }
 
     .brand-tagline {
-      color: rgba(157, 78, 221, 0.7);
+      color: rgba(0, 240, 255, 0.65);
+    }
+
+    .terminal-workspace {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+      border-top: 1px solid rgba(157, 78, 221, 0.15);
+    }
+
+    @media (min-width: 1024px) {
+      .terminal-workspace {
+        flex-direction: row;
+      }
+    }
+
+    .terminal-rail {
+      background: linear-gradient(180deg, rgba(5, 5, 5, 0.98) 0%, rgba(8, 4, 16, 0.95) 100%);
+      border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    @media (min-width: 1024px) {
+      .terminal-rail {
+        width: 280px;
+        flex-shrink: 0;
+        border-bottom: none;
+        border-right: 1px solid rgba(0, 240, 255, 0.28);
+        box-shadow:
+          inset -8px 0 24px rgba(157, 78, 221, 0.06),
+          4px 0 24px rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    .rail-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(157, 78, 221, 0.2);
+      background: rgba(0, 240, 255, 0.03);
+    }
+
+    .rail-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #FFD700;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+    }
+
+    .rail-subtitle {
+      font-size: 0.6rem;
+      color: rgba(0, 240, 255, 0.6);
+      margin-top: 4px;
+      letter-spacing: 0.08em;
+    }
+
+    .rail-metrics {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .metric-cell {
+      padding: 10px 12px;
+      background: rgba(5, 5, 5, 0.55);
+      border: 1px solid rgba(157, 78, 221, 0.22);
+      border-left: 2px solid rgba(0, 240, 255, 0.45);
+      box-shadow: 0 0 12px rgba(157, 78, 221, 0.05);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .metric-cell:hover {
+      border-color: rgba(255, 215, 0, 0.35);
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.1);
+    }
+
+    .terminal-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      min-width: 0;
+      padding: 10px;
+      gap: 10px;
+      overflow-y: auto;
+      background:
+        radial-gradient(ellipse at 20% 0%, rgba(157, 78, 221, 0.06) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 100%, rgba(0, 240, 255, 0.04) 0%, transparent 50%),
+        #050505;
+    }
+
+    .neon-panel {
+      border: 1px solid rgba(0, 240, 255, 0.28);
+      box-shadow:
+        0 0 14px rgba(0, 240, 255, 0.1),
+        0 0 28px rgba(157, 78, 221, 0.08),
+        inset 0 0 40px rgba(0, 240, 255, 0.02);
+      background: rgba(5, 5, 5, 0.35);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
     }
 
     .site-footer {
@@ -61,17 +170,15 @@
     }
 
     .glass {
-      background: rgba(255, 255, 255, 0.04);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 215, 0, 0.12);
-    }
-
-    .glass-placeholder {
-      background: rgba(157, 78, 221, 0.04);
+      background: rgba(5, 5, 5, 0.4);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(157, 78, 221, 0.15);
+      border: 1px solid rgba(0, 240, 255, 0.18);
+    }
+
+    .glass-placeholder,
+    .metric-cell {
+      background: rgba(5, 5, 5, 0.55);
     }
 
     .astro-label {
@@ -109,30 +216,32 @@
       color: #f87171;
     }
 
-    #tradingview-chart-container {
-      box-shadow:
-        0 0 20px rgba(255, 215, 0, 0.08),
-        0 0 40px rgba(255, 215, 0, 0.04),
-        inset 0 0 30px rgba(255, 215, 0, 0.02);
+    #darkpulsr-chart-container {
       overflow: hidden;
+      border-radius: 4px;
+      min-height: 480px;
+      flex: 1;
     }
 
-    #tradingview-chart-container .tradingview-widget-container {
+    .tradingview-widget-host {
+      width: 100%;
       height: 100%;
-      width: 100%;
+      min-height: 460px;
+      flex: 1;
     }
 
-    #tradingview-chart-container .tradingview-widget-container__widget {
-      height: calc(100% - 32px);
+    #tradingview-advanced-chart {
       width: 100%;
+      height: 100%;
+      min-height: 460px;
     }
 
     .market-card {
-      background: rgba(5, 5, 5, 0.65);
+      background: rgba(5, 5, 5, 0.55);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(157, 78, 221, 0.3);
-      box-shadow: 0 0 12px rgba(157, 78, 221, 0.06);
+      border: 1px solid rgba(0, 240, 255, 0.18);
+      box-shadow: 0 0 14px rgba(157, 78, 221, 0.08);
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
       padding: 1.25rem;
     }
@@ -154,8 +263,10 @@
     }
 
     .market-card:hover {
-      border-color: rgba(255, 215, 0, 0.35);
-      box-shadow: 0 0 16px rgba(255, 215, 0, 0.08);
+      border-color: rgba(0, 240, 255, 0.45);
+      box-shadow:
+        0 0 18px rgba(0, 240, 255, 0.15),
+        0 0 28px rgba(255, 215, 0, 0.08);
     }
 
     .mini-chart {
@@ -222,6 +333,76 @@
           0 0 28px rgba(157, 78, 221, 0.2);
       }
     }
+
+    .symbol-btn,
+    .overlay-toggle {
+      padding: 6px 14px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border-radius: 3px;
+      border: 1px solid rgba(157, 78, 221, 0.4);
+      background: rgba(5, 5, 5, 0.7);
+      color: rgba(157, 78, 221, 0.9);
+      cursor: pointer;
+      transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .symbol-btn:hover,
+    .overlay-toggle:hover {
+      border-color: rgba(0, 240, 255, 0.5);
+      color: #00f0ff;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+    }
+
+    .symbol-btn.active,
+    .overlay-toggle.active {
+      border-color: rgba(255, 215, 0, 0.55);
+      color: #FFD700;
+      box-shadow:
+        0 0 14px rgba(255, 215, 0, 0.25),
+        0 0 20px rgba(0, 240, 255, 0.1);
+    }
+
+    .chart-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px 6px;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(157, 78, 221, 0.15);
+    }
+
+    .overlay-control-panel,
+    .zoom-control-panel {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 12px;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(0, 240, 255, 0.22);
+      background: rgba(5, 5, 5, 0.55);
+    }
+
+    .panel-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(0, 240, 255, 0.75);
+      margin-right: 6px;
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.35);
+    }
+
+    .viewport-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255, 215, 0, 0.7);
+      padding: 8px 12px 0;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col text-gray-300 antialiased overflow-x-hidden">
@@ -231,40 +412,38 @@
     <span class="brand-tagline ml-3 text-[10px] md:text-xs uppercase tracking-widest hidden sm:inline">The Astro-Algo Nexus</span>
   </header>
 
-  <div class="flex flex-1 flex-col lg:flex-row min-h-0 lg:overflow-hidden">
+  <div class="terminal-workspace flex-1 min-h-0 lg:overflow-hidden">
 
-    <!-- Sidebar -->
-    <aside class="glass w-full lg:w-[300px] lg:shrink-0 flex flex-col p-4 md:p-5 m-3 md:m-4 lg:mr-0 rounded-xl overflow-y-auto">
-      <h2 class="text-sm font-semibold uppercase tracking-widest text-electric-gold mb-2">
-        Astro Intelligence
-      </h2>
-      <p id="ist-datetime" class="text-xs astro-label mb-6 tracking-wide">—</p>
+    <aside class="terminal-rail">
+      <div class="rail-header">
+        <p class="rail-title">Astro Intelligence</p>
+        <p id="ist-datetime" class="rail-subtitle">—</p>
+      </div>
 
-      <div class="flex flex-col gap-4 flex-1">
-        <div class="glass-placeholder rounded-lg p-4">
-          <p class="text-xs uppercase tracking-wider astro-label mb-2">Moon Sign</p>
+      <div class="rail-metrics">
+        <div class="metric-cell">
+          <p class="text-[10px] uppercase tracking-wider astro-label mb-1">Moon Sign</p>
           <p id="moon-sign-value" class="text-sm font-medium astro-value">—</p>
         </div>
 
-        <div class="glass-placeholder rounded-lg p-4">
-          <p class="text-xs uppercase tracking-wider astro-label mb-2">Nakshatra</p>
+        <div class="metric-cell">
+          <p class="text-[10px] uppercase tracking-wider astro-label mb-1">Nakshatra</p>
           <p id="nakshatra-value" class="text-sm font-medium astro-value">—</p>
         </div>
 
-        <div class="glass-placeholder rounded-lg p-4">
-          <p class="text-xs uppercase tracking-wider astro-label mb-2">Jupiter Transit</p>
+        <div class="metric-cell">
+          <p class="text-[10px] uppercase tracking-wider astro-label mb-1">Jupiter Transit</p>
           <p id="jupiter-transit-value" class="text-sm font-medium astro-value">—</p>
         </div>
 
-        <div class="glass-placeholder rounded-lg p-4">
-          <p class="text-xs uppercase tracking-wider astro-label mb-2">Market Pulse</p>
+        <div class="metric-cell">
+          <p class="text-[10px] uppercase tracking-wider astro-label mb-1">Market Pulse</p>
           <p id="market-pulse-value" class="text-sm font-medium flex items-center">—</p>
         </div>
       </div>
     </aside>
 
-    <!-- Main Area -->
-    <main class="flex-1 flex flex-col min-h-0 min-w-0 p-3 md:p-4 m-3 md:m-4 lg:ml-4 overflow-y-auto gap-3 md:gap-4">
+    <section class="terminal-stage">
 
       <!-- Astro-Alert Banner -->
       <div id="astro-alert-banner" class="astro-alert hidden shrink-0" role="alert">
@@ -272,33 +451,14 @@
         <button id="astro-alert-dismiss" class="astro-alert-dismiss" type="button" aria-label="Dismiss alert">&#10005;</button>
       </div>
 
-      <div
-        id="tradingview-chart-container"
-        class="glass w-full flex-1 min-h-[280px] rounded-xl shrink-0"
-      >
-        <!-- TradingView Widget BEGIN -->
-        <div class="tradingview-widget-container">
-          <div class="tradingview-widget-container__widget"></div>
-          <script
-            type="text/javascript"
-            src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
-            async
-          >
-          {
-            "autosize": true,
-            "symbol": "NASDAQ:AAPL",
-            "interval": "D",
-            "timezone": "Etc/UTC",
-            "theme": "dark",
-            "style": "1",
-            "locale": "en",
-            "allow_symbol_change": true,
-            "calendar": false,
-            "support_host": "https://www.tradingview.com"
-          }
-          </script>
+      <div class="flex flex-col flex-1 min-h-[520px] shrink-0 w-full neon-panel">
+        <p class="viewport-label">// TRADINGVIEW ADVANCED TERMINAL</p>
+        <div
+          id="darkpulsr-chart-container"
+          class="w-full flex-1 flex flex-col overflow-hidden min-h-[480px]"
+        >
+          <div id="tradingview-advanced-chart" class="tradingview-widget-host"></div>
         </div>
-        <!-- TradingView Widget END -->
       </div>
 
       <!-- Mundane Grid -->
@@ -384,7 +544,7 @@
         </div>
       </section>
 
-    </main>
+    </section>
 
   </div>
 
@@ -392,6 +552,8 @@
     <span class="footer-brand">DarkPulsr</span> | Powered by Astro_Hiteshh | Advanced Astro-Financial Analytics
   </footer>
 
+  <script src="https://s3.tradingview.com/tv.js"></script>
+  <script src="js/tradingview-advanced.js"></script>
   <script>
     const RASHIS = [
       'Mesha', 'Vrishabha', 'Mithuna', 'Karka', 'Simha', 'Kanya',
@@ -613,6 +775,7 @@
       setInterval(updateAstroIntelligence, 1000);
       updateMarketForecasts();
       checkAstroEvents();
+      initTradingViewAdvancedChart('tradingview-advanced-chart');
 
       const dismissBtn = document.getElementById('astro-alert-dismiss');
       if (dismissBtn) {
