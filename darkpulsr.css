@@ -1,0 +1,14 @@
+/* DarkPulsr — TradingView Advanced Widget theme overrides */
+
+:root {
+  --tv-color-platform-background: #050505;
+  --tv-color-pane-background: #050505;
+  --tv-color-toolbar-button-background-hover: rgba(157, 78, 221, 0.15);
+  --tv-color-toolbar-button-text-active: #ffd700;
+}
+
+.chart-page,
+.layout__area--center,
+.chart-container {
+  background-color: #050505 !important;
+}
