@@ -72,17 +72,6 @@
     default: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="10" y="10" width="8" height="8" fill="currentColor" opacity="0.35"/><path d="M14 6v4M14 18v4"/></svg>',
   };
 
-  const INDICATORS = [
-    { id: 'sma', name: 'Moving Average (SMA)', category: 'Popular' },
-    { id: 'ema', name: 'Moving Average (EMA)', category: 'Popular' },
-    { id: 'rsi', name: 'Relative Strength Index', category: 'Popular' },
-    { id: 'macd', name: 'MACD', category: 'Popular' },
-    { id: 'bb', name: 'Bollinger Bands', category: 'Popular' },
-    { id: 'vwap', name: 'VWAP', category: 'Volume' },
-    { id: 'atr', name: 'Average True Range', category: 'Volatility' },
-    { id: 'stoch', name: 'Stochastic', category: 'Momentum' },
-  ];
-
   const LAYOUTS = [
     { id: '1', label: '1 chart' },
     { id: '2h', label: '2 charts · horizontal' },
@@ -128,6 +117,7 @@
         onTimeframeChange: options.onTimeframeChange || (() => {}),
         onSettings: options.onSettings || (() => {}),
         onIndicatorAdd: options.onIndicatorAdd || (() => {}),
+        onIndicatorsOpen: options.onIndicatorsOpen || (() => {}),
         onLayoutChange: options.onLayoutChange || (() => {}),
         onAlert: options.onAlert || (() => {}),
         onReplay: options.onReplay || (() => {}),
@@ -216,23 +206,10 @@
               <span class="dp-toolbar-icon">${ICONS.settings}</span>
             </button>
 
-            <div class="dp-toolbar-dropdown-wrap" data-dropdown="indicators">
-              <button type="button" class="dp-toolbar-btn dp-toolbar-btn-text" data-action="indicators-toggle" title="Indicators">
-                <span class="dp-toolbar-icon dp-toolbar-icon-sm">${ICONS.chart}</span>
-                <span>Indicators</span>
-              </button>
-              <div class="dp-toolbar-menu dp-toolbar-menu-wide hidden" data-menu="indicators" role="menu">
-                <input type="search" class="dp-toolbar-menu-search" data-indicator-search placeholder="Search indicators…" />
-                <div class="dp-toolbar-menu-list" data-indicator-list>
-                  ${INDICATORS.map((ind) => (
-                    `<button type="button" class="dp-toolbar-menu-item" data-indicator="${ind.id}" role="menuitem">
-                      <span>${escapeHtml(ind.name)}</span>
-                      <span class="dp-toolbar-menu-meta">${escapeHtml(ind.category)}</span>
-                    </button>`
-                  )).join('')}
-                </div>
-              </div>
-            </div>
+            <button type="button" class="dp-toolbar-btn dp-toolbar-btn-text" data-action="indicators-open" title="Indicators, metrics, and strategies">
+              <span class="dp-toolbar-icon dp-toolbar-icon-sm">${ICONS.chart}</span>
+              <span>Indicators</span>
+            </button>
 
             <div class="dp-toolbar-dropdown-wrap" data-dropdown="layout">
               <button type="button" class="dp-toolbar-btn dp-toolbar-btn-icon" data-action="layout-toggle" title="Layout">
@@ -320,8 +297,8 @@
         replayBtn: this.root.querySelector('[data-action="replay"]'),
         undoBtn: this.root.querySelector('[data-action="undo"]'),
         redoBtn: this.root.querySelector('[data-action="redo"]'),
-        indicatorSearch: this.root.querySelector('[data-indicator-search]'),
-        indicatorList: this.root.querySelector('[data-indicator-list]'),
+        indicatorSearch: null,
+        indicatorList: null,
         compareList: this.root.querySelector('[data-tb-compare-wrap]'),
         chartTypeIcon: this.root.querySelector('[data-tb-charttype-icon]'),
       };
@@ -365,8 +342,9 @@
           this._openPanel('settings');
           return;
         }
-        if (action === 'indicators-toggle') {
-          this._toggleMenu('indicators');
+        if (action === 'indicators-open') {
+          this._closeMenus();
+          this.handlers.onIndicatorsOpen(this.state);
           return;
         }
         if (action === 'layout-toggle') {
@@ -418,11 +396,6 @@
           this.handlers.onTimeframeChange(tf, this.state);
           return;
         }
-        if (target.dataset.indicator) {
-          this._closeMenus();
-          this.handlers.onIndicatorAdd(target.dataset.indicator, this.state);
-          return;
-        }
         if (target.dataset.layout) {
           this._closeMenus();
           this.setState({ layout: target.dataset.layout });
@@ -436,14 +409,6 @@
           if (key === 'undo') this.handlers.onUndo(this.state);
           if (key === 'redo') this.handlers.onRedo(this.state);
         }
-      });
-
-      this.els.indicatorSearch?.addEventListener('input', () => {
-        const q = this.els.indicatorSearch.value.trim().toLowerCase();
-        this.els.indicatorList?.querySelectorAll('[data-indicator]').forEach((row) => {
-          const name = row.textContent.toLowerCase();
-          row.classList.toggle('hidden', q && !name.includes(q));
-        });
       });
 
       document.addEventListener('mousedown', (event) => {
