@@ -819,6 +819,13 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      if (new URLSearchParams(window.location.search).has('reset')) {
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch (_) { /* ignore */ }
+      }
+
       updateAstroIntelligence();
       setInterval(updateAstroIntelligence, 1000);
       updateMarketForecasts();

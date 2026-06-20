@@ -1,8 +1,9 @@
 /**
  * DarkPulsr — TradingView Advanced Charts Widget (tv.js)
- * Embed-safe defaults only — never NSE/BSE restricted symbols on load.
+ * Forces BINANCE:BTCUSDT — blocks NSE/BSE restore from saved charts.
  */
 const TRADINGVIEW_DEFAULT_SYMBOL = 'BINANCE:BTCUSDT';
+const TRADINGVIEW_DEFAULT_INTERVAL = '60';
 
 const TRADINGVIEW_FORBIDDEN_SYMBOLS = [
   'NSE:NIFTY',
@@ -11,11 +12,39 @@ const TRADINGVIEW_FORBIDDEN_SYMBOLS = [
   'BSE:SENSEX',
 ];
 
+/** Prevents TradingView from loading a saved chart with NSE:NIFTY */
+const TRADINGVIEW_NO_SAVE_ADAPTER = {
+  getAllCharts() {
+    return Promise.resolve([]);
+  },
+  removeChart() {
+    return Promise.resolve();
+  },
+  saveChart() {
+    return Promise.resolve('1');
+  },
+  getChartContent() {
+    return Promise.resolve(null);
+  },
+  getAllStudyTemplates() {
+    return Promise.resolve([]);
+  },
+  removeStudyTemplate() {
+    return Promise.resolve();
+  },
+  saveStudyTemplate() {
+    return Promise.resolve('1');
+  },
+  getStudyTemplateContent() {
+    return Promise.resolve('');
+  },
+};
+
 const TRADINGVIEW_WIDGET_CONFIG = {
   autosize: true,
   fullscreen: true,
   symbol: TRADINGVIEW_DEFAULT_SYMBOL,
-  interval: '60',
+  interval: TRADINGVIEW_DEFAULT_INTERVAL,
   timezone: 'Asia/Kolkata',
   theme: 'Dark',
   style: '1',
@@ -32,11 +61,18 @@ const TRADINGVIEW_WIDGET_CONFIG = {
   hide_legend: false,
   support_host: 'https://www.tradingview.com',
   symbol_search_request_delay: 500,
+  save_load_adapter: TRADINGVIEW_NO_SAVE_ADAPTER,
   enabled_features: ['side_toolbar_in_fullscreen_mode'],
   disabled_features: [
     'use_localstorage_for_settings',
     'save_chart_properties_to_local_storage',
+    'header_saveload',
+    'study_templates',
   ],
+  loading_screen: {
+    backgroundColor: '#050505',
+    foregroundColor: '#FFD700',
+  },
 };
 
 function isForbiddenTradingViewSymbol(symbol) {
@@ -46,16 +82,34 @@ function isForbiddenTradingViewSymbol(symbol) {
   return normalized.startsWith('NSE:') || normalized.startsWith('BSE:');
 }
 
-function clearTradingViewLocalCache() {
+function clearTradingViewStorage() {
+  const patterns = [/tradingview/i, /tv\./i, /tvwidget/i, /chart\.properties/i, /nifty/i, /nse:/i];
   try {
-    for (let i = localStorage.length - 1; i >= 0; i -= 1) {
-      const key = localStorage.key(i);
-      if (key && /tradingview|tv\.widget|tvwidget|chart\.properties/i.test(key)) {
-        localStorage.removeItem(key);
+    for (const store of [localStorage, sessionStorage]) {
+      for (let i = store.length - 1; i >= 0; i -= 1) {
+        const key = store.key(i);
+        if (key && patterns.some((re) => re.test(key))) {
+          store.removeItem(key);
+        }
       }
     }
   } catch (_) {
-    /* storage blocked */
+    /* private browsing */
+  }
+}
+
+function forceSafeSymbol(widget) {
+  if (!widget || typeof widget.chart !== 'function') return;
+
+  try {
+    const chart = widget.chart();
+    if (!chart || typeof chart.setSymbol !== 'function') return;
+
+    chart.setSymbol(TRADINGVIEW_DEFAULT_SYMBOL, TRADINGVIEW_DEFAULT_INTERVAL, () => {
+      console.info('[DarkPulsr] Chart symbol locked to', TRADINGVIEW_DEFAULT_SYMBOL);
+    });
+  } catch (error) {
+    console.warn('[DarkPulsr] setSymbol fallback:', error);
   }
 }
 
@@ -66,7 +120,7 @@ function initTradingViewAdvancedChart(containerId = 'tradingview-advanced-chart'
     return null;
   }
 
-  clearTradingViewLocalCache();
+  clearTradingViewStorage();
   container.innerHTML = '';
 
   function createWidget() {
@@ -75,18 +129,21 @@ function initTradingViewAdvancedChart(containerId = 'tradingview-advanced-chart'
       return;
     }
 
-    const safeSymbol = isForbiddenTradingViewSymbol(TRADINGVIEW_WIDGET_CONFIG.symbol)
-      ? TRADINGVIEW_DEFAULT_SYMBOL
-      : TRADINGVIEW_WIDGET_CONFIG.symbol;
-
-    window.tradingViewWidget = new TradingView.widget({
+    const widget = new TradingView.widget({
       ...TRADINGVIEW_WIDGET_CONFIG,
       container_id: containerId,
-      symbol: safeSymbol,
+      symbol: TRADINGVIEW_DEFAULT_SYMBOL,
       theme: 'Dark',
       allow_symbol_change: true,
       hide_side_toolbar: false,
     });
+
+    widget.onChartReady(() => {
+      forceSafeSymbol(widget);
+      setTimeout(() => forceSafeSymbol(widget), 800);
+    });
+
+    window.tradingViewWidget = widget;
   }
 
   createWidget();
