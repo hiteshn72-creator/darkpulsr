@@ -1,10 +1,12 @@
 /**
  * DarkPulsr Chart Engine — TradingView Lightweight Charts v4+
- * Modular entry point for astro-financial overlays.
+ * Stable scales, validated data, bounded visible range.
  */
+const VISIBLE_BAR_COUNT = 96;
+
 const DARKPULSR_CHART_THEME = {
   layout: {
-    background: { type: 'solid', color: 'transparent' },
+    background: { type: 'solid', color: '#050505' },
     textColor: 'rgba(157, 78, 221, 0.9)',
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
   },
@@ -18,14 +20,24 @@ const DARKPULSR_CHART_THEME = {
   },
   rightPriceScale: {
     borderColor: 'rgba(0, 240, 255, 0.25)',
+    autoScale: true,
+    scaleMargins: {
+      top: 0.12,
+      bottom: 0.12,
+    },
+  },
+  leftPriceScale: {
+    visible: false,
   },
   timeScale: {
     borderColor: 'rgba(255, 215, 0, 0.2)',
     timeVisible: true,
     secondsVisible: false,
-    fixLeftEdge: false,
-    fixRightEdge: false,
-    rightOffset: 8,
+    fixLeftEdge: true,
+    fixRightEdge: true,
+    rightOffset: 12,
+    barSpacing: 8,
+    minBarSpacing: 2,
   },
 };
 
@@ -50,9 +62,39 @@ const DARKPULSR_CHART_INTERACTION = {
   },
   kineticScroll: {
     touch: true,
-    mouse: true,
+    mouse: false,
   },
 };
+
+function isValidCandle(candle) {
+  if (!candle || typeof candle !== 'object') return false;
+
+  const { time, open, high, low, close } = candle;
+  if (![time, open, high, low, close].every((n) => Number.isFinite(n))) return false;
+  if (time <= 0) return false;
+  if (high < low) return false;
+
+  return true;
+}
+
+function sanitizeCandles(raw) {
+  if (!Array.isArray(raw) || raw.length === 0) return [];
+
+  const byTime = new Map();
+
+  for (const candle of raw) {
+    if (!isValidCandle(candle)) continue;
+    byTime.set(candle.time, {
+      time: candle.time,
+      open: candle.open,
+      high: candle.high,
+      low: candle.low,
+      close: candle.close,
+    });
+  }
+
+  return Array.from(byTime.values()).sort((a, b) => a.time - b.time);
+}
 
 class DarkPulsrChart {
   constructor(hostId, options = {}) {
@@ -68,6 +110,7 @@ class DarkPulsrChart {
     this.statusEl = options.statusEl || null;
     this.spinnerEl = options.spinnerEl || null;
     this.loadRequestId = 0;
+    this._resizeTimer = null;
 
     this._buildChart();
     this.markerLayer = new AstroMarkerLayer(this.chart, this.host);
@@ -95,9 +138,21 @@ class DarkPulsrChart {
   }
 
   _resizeChart() {
+    if (!this.chart) return;
     const { width, height } = this._hostSize();
     this.chart.applyOptions({ width, height });
     this.markerLayer?.redraw();
+  }
+
+  _setInitialVisibleRange(candles) {
+    if (!candles.length) return;
+
+    const total = candles.length;
+    const visible = Math.min(VISIBLE_BAR_COUNT, total);
+    const from = Math.max(0, total - visible);
+    const to = total - 1;
+
+    this.chart.timeScale().setVisibleLogicalRange({ from, to });
   }
 
   _buildChart() {
@@ -114,9 +169,20 @@ class DarkPulsrChart {
       height,
     });
 
+    this.chart.priceScale('right').applyOptions({
+      autoScale: true,
+      borderColor: 'rgba(0, 240, 255, 0.25)',
+      scaleMargins: { top: 0.12, bottom: 0.12 },
+    });
+
     this.chart.timeScale().applyOptions({
+      fixLeftEdge: true,
+      fixRightEdge: true,
+      rightOffset: 12,
       barSpacing: 8,
       minBarSpacing: 2,
+      timeVisible: true,
+      secondsVisible: false,
     });
 
     this.candleSeries = this.chart.addCandlestickSeries({
@@ -126,20 +192,18 @@ class DarkPulsrChart {
       borderDownColor: '#f87171',
       wickUpColor: '#4ade80',
       wickDownColor: '#f87171',
+      priceScaleId: 'right',
     });
 
     requestAnimationFrame(() => this._resizeChart());
-    setTimeout(() => this._resizeChart(), 250);
   }
 
   _bindResize() {
     this._resizeObserver = new ResizeObserver(() => {
-      this._resizeChart();
+      clearTimeout(this._resizeTimer);
+      this._resizeTimer = setTimeout(() => this._resizeChart(), 120);
     });
     this._resizeObserver.observe(this.host);
-    if (this.host.parentElement) {
-      this._resizeObserver.observe(this.host.parentElement);
-    }
   }
 
   _closeStream() {
@@ -166,21 +230,26 @@ class DarkPulsrChart {
     this.interval = interval;
 
     this.candleSeries.setData([]);
-    this.chart.timeScale().fitContent();
     this._showSpinner(true);
     this._setStatus(`Fetching ${symbolKey}…`);
 
     try {
-      const candles = await this.feed.fetchKlines(symbolKey, interval);
-
+      const raw = await this.feed.fetchKlines(symbolKey, interval);
       if (requestId !== this.loadRequestId) return;
 
+      const candles = sanitizeCandles(raw);
+      if (!candles.length) {
+        throw new Error(`No valid candle data for ${symbolKey}`);
+      }
+
       this.candleSeries.setData(candles);
-      this.chart.timeScale().fitContent();
+      this._setInitialVisibleRange(candles);
+      this.chart.priceScale('right').applyOptions({ autoScale: true });
       this._setStatus(this._statusLabel(symbolKey));
 
       this.stream = this.feed.subscribe(symbolKey, interval, (candle) => {
         if (requestId !== this.loadRequestId) return;
+        if (!isValidCandle(candle)) return;
         this.candleSeries.update(candle);
       });
 
@@ -198,7 +267,6 @@ class DarkPulsrChart {
     }
   }
 
-  /** Hook for your astro logic — plot directly on the chart. */
   getChart() {
     return this.chart;
   }
@@ -222,30 +290,29 @@ class DarkPulsrChart {
   _applyZoom(factor) {
     const timeScale = this.chart.timeScale();
     const range = timeScale.getVisibleLogicalRange();
-    if (!range) return;
+    if (!range || !Number.isFinite(range.from) || !Number.isFinite(range.to)) return;
+
+    const span = range.to - range.from;
+    if (span <= 5) return;
 
     const center = (range.from + range.to) / 2;
-    const halfSpan = (range.to - range.from) / 2;
-    const newHalfSpan = Math.max(5, halfSpan * factor);
+    const newHalfSpan = Math.max(5, (span / 2) * factor);
 
     timeScale.setVisibleLogicalRange({
       from: center - newHalfSpan,
       to: center + newHalfSpan,
     });
-    this.markerLayer.redraw();
+    this.markerLayer?.redraw();
   }
 
   bindZoomControls(zoomInBtn, zoomOutBtn) {
-    if (zoomInBtn) {
-      zoomInBtn.addEventListener('click', () => this.zoomIn());
-    }
-    if (zoomOutBtn) {
-      zoomOutBtn.addEventListener('click', () => this.zoomOut());
-    }
+    if (zoomInBtn) zoomInBtn.addEventListener('click', () => this.zoomIn());
+    if (zoomOutBtn) zoomOutBtn.addEventListener('click', () => this.zoomOut());
   }
 
   destroy() {
     this._closeStream();
+    clearTimeout(this._resizeTimer);
     this._resizeObserver?.disconnect();
     this.markerLayer?.destroy();
     this.chart?.remove();
@@ -254,4 +321,5 @@ class DarkPulsrChart {
 
 window.DARKPULSR_CHART_THEME = DARKPULSR_CHART_THEME;
 window.DARKPULSR_CHART_INTERACTION = DARKPULSR_CHART_INTERACTION;
+window.sanitizeCandles = sanitizeCandles;
 window.DarkPulsrChart = DarkPulsrChart;
