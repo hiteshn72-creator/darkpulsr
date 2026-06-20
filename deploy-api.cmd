@@ -1,28 +1,24 @@
 @echo off
-title DarkPulsr API Deploy (Vercel)
+title DarkPulsr API Deploy (Render Blueprint)
 cd /d "%~dp0"
 
-where node >nul 2>&1 || (echo Node.js not found. & pause & exit /b 1)
-
-echo.
-echo Deploying Yahoo proxy API to Vercel...
-echo Project name: darkpulsr-api
-echo.
-
-call npx vercel deploy --prod --yes --name darkpulsr-api
-if errorlevel 1 (
-  echo.
-  echo If first time: run  npx vercel login
-  echo Then retry this script.
-  pause
-  exit /b 1
-)
-
 echo.
 echo ========================================
-echo   API DEPLOY COMPLETE
-echo   Set in index.html (GitHub Pages):
-echo   DARKPULSR_API_BASE = your Vercel URL
+echo   DarkPulsr Yahoo API - Render Deploy
 echo ========================================
+echo.
+echo Step 1: Browser mein Render Blueprint khulega
+echo Step 2: GitHub repo connect karo (darkpulsr)
+echo Step 3: "Apply" dabao - service auto ban jayegi
+echo.
+echo API URL: https://darkpulsr-api.onrender.com
+echo GitHub Pages is URL ko automatically use karega.
+echo.
+
+start "" "https://dashboard.render.com/bp/new?repo=https://github.com/hiteshn72-creator/darkpulsr"
+
+echo Browser open ho gaya. Render par Apply ke baad 2-3 min wait karo.
+echo.
+echo Test: https://darkpulsr-api.onrender.com/api/health
 echo.
 pause
