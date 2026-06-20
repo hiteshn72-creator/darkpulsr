@@ -284,6 +284,10 @@
       margin-left: auto;
     }
 
+    #chart-status.error {
+      color: #f87171;
+    }
+
     .chart-feed-note {
       font-size: 0.55rem;
       letter-spacing: 0.08em;
@@ -653,12 +657,12 @@
   </footer>
 
   <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
-  <script src="js/binance-feed.js"></script>
-  <script src="js/yahoo-feed.js"></script>
-  <script src="js/market-data.js"></script>
-  <script src="js/astro-marker-layer.js"></script>
-  <script src="js/overlay-manager.js"></script>
-  <script src="js/darkpulsr-chart.js"></script>
+  <script src="js/binance-feed.js?v=3"></script>
+  <script src="js/yahoo-feed.js?v=3"></script>
+  <script src="js/market-data.js?v=3"></script>
+  <script src="js/astro-marker-layer.js?v=3"></script>
+  <script src="js/overlay-manager.js?v=3"></script>
+  <script src="js/darkpulsr-chart.js?v=3"></script>
   <script>
     const RASHIS = [
       'Mesha', 'Vrishabha', 'Mithuna', 'Karka', 'Simha', 'Kanya',
@@ -912,8 +916,15 @@
           card.classList.toggle('chart-active', card.dataset.symbol === symbolKey);
         });
         const interval = document.querySelector('.tf-btn.active')?.dataset.interval || '1h';
+        const statusEl = document.getElementById('chart-status');
+        if (statusEl) {
+          statusEl.textContent = `Loading ${symbolKey}…`;
+          statusEl.classList.remove('error');
+        }
         return darkPulsrChart.loadSymbol(symbolKey, interval).then(() => {
           overlayManager.refresh();
+        }).catch(() => {
+          /* status already set in chart engine */
         });
       }
 

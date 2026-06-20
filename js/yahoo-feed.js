@@ -1,6 +1,6 @@
 /**
- * DarkPulsr — Yahoo Finance chart API (browser yfinance equivalent).
- * Uses Yahoo's public chart endpoint; falls back to CORS proxy on GitHub Pages.
+ * DarkPulsr — Yahoo Finance (browser yfinance equivalent).
+ * Works on GitHub Pages via CORS proxies — no TradingView restrictions.
  */
 const YahooFeed = {
   CHART_BASE: 'https://query1.finance.yahoo.com/v8/finance/chart/',
@@ -14,23 +14,33 @@ const YahooFeed = {
     '1d':  { interval: '1d',  range: '1y' },
   },
 
-  async _fetchJson(url) {
-    const attempts = [
-      () => fetch(url),
-      () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`),
-      () => fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`),
+  _proxyUrls(targetUrl) {
+    return [
+      `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+      targetUrl,
     ];
+  },
 
-    for (const attempt of attempts) {
+  async _fetchJson(url) {
+    let lastError = null;
+
+    for (const fetchUrl of this._proxyUrls(url)) {
       try {
-        const response = await attempt();
-        if (response.ok) return response.json();
-      } catch (_) {
-        /* try next proxy */
+        const response = await fetch(fetchUrl, { cache: 'no-store' });
+        if (!response.ok) {
+          lastError = new Error(`HTTP ${response.status}`);
+          continue;
+        }
+        const payload = await response.json();
+        if (payload?.chart?.result?.[0]) return payload;
+        lastError = new Error('Empty Yahoo payload');
+      } catch (error) {
+        lastError = error;
       }
     }
 
-    throw new Error(`Yahoo chart unreachable for ${url}`);
+    throw lastError || new Error(`Yahoo chart unreachable: ${url}`);
   },
 
   async fetchKlines(yahooSymbol, interval = '1h') {
@@ -38,11 +48,7 @@ const YahooFeed = {
     const url = `${this.CHART_BASE}${encodeURIComponent(yahooSymbol)}?interval=${cfg.interval}&range=${cfg.range}&includePrePost=false`;
 
     const payload = await this._fetchJson(url);
-    const result = payload?.chart?.result?.[0];
-    if (!result?.timestamp?.length) {
-      throw new Error(`No Yahoo data for ${yahooSymbol}`);
-    }
-
+    const result = payload.chart.result[0];
     const quotes = result.indicators.quote[0];
     const candles = [];
 
@@ -60,6 +66,10 @@ const YahooFeed = {
         low,
         close,
       });
+    }
+
+    if (!candles.length) {
+      throw new Error(`No candles for ${yahooSymbol}`);
     }
 
     return candles;

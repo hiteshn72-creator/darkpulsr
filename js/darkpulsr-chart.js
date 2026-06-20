@@ -72,8 +72,10 @@ class DarkPulsrChart {
     this._bindResize();
   }
 
-  _setStatus(text) {
-    if (this.statusEl) this.statusEl.textContent = text;
+  _setStatus(text, isError = false) {
+    if (!this.statusEl) return;
+    this.statusEl.textContent = text;
+    this.statusEl.classList.toggle('error', isError);
   }
 
   _buildChart() {
@@ -143,7 +145,7 @@ class DarkPulsrChart {
       }
     } catch (error) {
       console.error('[DarkPulsrChart]', error);
-      this._setStatus(`Error loading ${symbolKey}`);
+      this._setStatus(`Failed: ${symbolKey} — retry or pick BTC`, true);
       throw error;
     }
   }
