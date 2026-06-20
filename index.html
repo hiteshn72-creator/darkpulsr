@@ -223,17 +223,65 @@
       flex: 1;
     }
 
-    .tradingview-widget-host {
+    .tradingview-widget-host,
+    #tradingview-advanced-chart {
       width: 100%;
       height: 100%;
       min-height: 460px;
       flex: 1;
     }
 
-    #tradingview-advanced-chart {
+    #darkpulsr-chart-host {
+      position: relative;
+      flex: 1;
+      min-height: 360px;
       width: 100%;
-      height: 100%;
-      min-height: 460px;
+    }
+
+    .astro-marker-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .tf-btn,
+    .zoom-btn {
+      padding: 6px 12px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border-radius: 3px;
+      border: 1px solid rgba(157, 78, 221, 0.4);
+      background: rgba(5, 5, 5, 0.7);
+      color: rgba(157, 78, 221, 0.9);
+      cursor: pointer;
+      transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .tf-btn:hover,
+    .zoom-btn:hover {
+      border-color: rgba(0, 240, 255, 0.5);
+      color: #00f0ff;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+    }
+
+    .tf-btn.active {
+      border-color: rgba(255, 215, 0, 0.55);
+      color: #FFD700;
+      box-shadow:
+        0 0 14px rgba(255, 215, 0, 0.25),
+        0 0 20px rgba(0, 240, 255, 0.1);
+    }
+
+    #chart-status {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(0, 240, 255, 0.7);
+      margin-left: auto;
     }
 
     .market-card {
@@ -452,7 +500,7 @@
       </div>
 
       <div class="flex flex-col flex-1 min-h-[520px] shrink-0 w-full neon-panel">
-        <p class="viewport-label">// TRADINGVIEW ADVANCED TERMINAL</p>
+        <p class="viewport-label">// TRADINGVIEW ADVANCED TERMINAL · BINANCE:BTCUSDT</p>
         <div
           id="darkpulsr-chart-container"
           class="w-full flex-1 flex flex-col overflow-hidden min-h-[480px]"
@@ -775,6 +823,7 @@
       setInterval(updateAstroIntelligence, 1000);
       updateMarketForecasts();
       checkAstroEvents();
+
       initTradingViewAdvancedChart('tradingview-advanced-chart');
 
       const dismissBtn = document.getElementById('astro-alert-dismiss');
