@@ -1,5 +1,6 @@
 /**
  * DarkPulsr — TradingView Advanced Charts Widget (tv.js)
+ * Default symbol must be a public embed-safe pair (no NSE/restricted exchanges).
  */
 const TRADINGVIEW_DEFAULT_SYMBOL = 'BINANCE:BTCUSDT';
 
@@ -22,6 +23,9 @@ const TRADINGVIEW_WIDGET_CONFIG = {
   hide_top_toolbar: false,
   hide_legend: false,
   support_host: 'https://www.tradingview.com',
+  symbol_search_request_delay: 500,
+  enabled_features: ['side_toolbar_in_fullscreen_mode'],
+  disabled_features: ['use_localstorage_for_settings'],
 };
 
 function initTradingViewAdvancedChart(containerId = 'tradingview-advanced-chart') {
