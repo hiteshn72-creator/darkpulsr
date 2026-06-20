@@ -339,7 +339,10 @@ class DarkPulsrChart {
       if (requestId !== this.loadRequestId) return;
       console.error('[DarkPulsrChart]', error);
       this.candleSeries.setData([]);
-      this._setStatus(`Failed: ${symbolKey} — try BTC or refresh`, true);
+      const msg = window.YahooFeed?.userMessage?.(error)
+        || error?.message
+        || `Failed to load ${symbolKey}`;
+      this._setStatus(msg, true);
       throw error;
     } finally {
       if (requestId === this.loadRequestId) this._showSpinner(false);

@@ -128,6 +128,26 @@ const UniversalMarketData = {
     return this.resolve(key);
   },
 
+  /** Register a symbol picked from search (crypto, custom tickers). */
+  registerDynamic(entry) {
+    const id = String(entry.id || entry.yahoo || '').trim().toUpperCase();
+    if (!id) return null;
+
+    const config = {
+      id,
+      label: entry.label || id,
+      yahoo: entry.yahoo || id,
+      category: entry.category || 'custom',
+      live: !!entry.live,
+      ...(entry.binance ? { binance: entry.binance } : {}),
+      ...(entry.icon ? { icon: entry.icon } : {}),
+      ...(entry.exchange ? { exchange: entry.exchange } : {}),
+    };
+
+    this.dynamic[id] = config;
+    return config;
+  },
+
   isLive(key) {
     return !!this.resolve(key)?.live;
   },

@@ -17,7 +17,7 @@ echo.
 echo Deploying DarkPulsr to GitHub Pages...
 echo.
 
-git add index.html .nojekyll darkpulsr.css deploy.cmd FINISH-DEPLOY.bat js\ 2>nul
+git add index.html .nojekyll darkpulsr.css deploy.cmd deploy-api.cmd start.cmd FINISH-DEPLOY.bat js\ server\ api\ server.js package.json package-lock.json vercel.json render.yaml .gitignore .github\ 2>nul
 git diff --cached --quiet
 if errorlevel 1 (
     set GIT_AUTHOR_NAME=Astro_Hiteshh

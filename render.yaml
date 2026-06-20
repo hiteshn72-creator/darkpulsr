@@ -1,0 +1,16 @@
+# DarkPulsr Yahoo Finance proxy (Node.js + Express)
+# Connect repo at: https://dashboard.render.com/blueprints
+
+services:
+  - type: web
+    name: darkpulsr-api
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+    autoDeploy: true

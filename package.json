@@ -1,0 +1,17 @@
+{
+  "name": "darkpulsr",
+  "version": "1.0.0",
+  "description": "DarkPulsr — Astro-Financial terminal with Yahoo Finance proxy",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}
