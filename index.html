@@ -259,6 +259,130 @@
       max-width: 280px;
     }
 
+    .tv-symbol-search-wrap {
+      position: relative;
+      flex: 0 1 320px;
+      min-width: 200px;
+      max-width: 360px;
+      z-index: 20;
+    }
+
+    .tv-symbol-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      border: 1px solid #363a45;
+      border-radius: 4px;
+      background: #131722;
+      cursor: text;
+    }
+
+    .tv-symbol-search:focus-within {
+      border-color: #2962ff;
+      box-shadow: 0 0 0 1px rgba(41, 98, 255, 0.35);
+    }
+
+    .tv-symbol-search-icon {
+      width: 16px;
+      height: 16px;
+      color: #787b86;
+      flex-shrink: 0;
+    }
+
+    .tv-symbol-search-input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      background: transparent;
+      color: #d1d4dc;
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+    }
+
+    .tv-symbol-search-input::placeholder {
+      color: #787b86;
+      font-weight: 500;
+    }
+
+    .tv-symbol-search-kbd {
+      font-size: 10px;
+      color: #787b86;
+      border: 1px solid #363a45;
+      border-radius: 3px;
+      padding: 1px 5px;
+      flex-shrink: 0;
+      letter-spacing: 0.04em;
+    }
+
+    .tv-symbol-search-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      max-height: 320px;
+      overflow-y: auto;
+      background: #1e222d;
+      border: 1px solid #363a45;
+      border-radius: 4px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    .tv-symbol-search-dropdown.hidden {
+      display: none;
+    }
+
+    .tv-inline-search-row {
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+      padding: 8px 10px;
+      border: none;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(42, 46, 57, 0.6);
+    }
+
+    .tv-inline-search-row:last-child {
+      border-bottom: none;
+    }
+
+    .tv-inline-search-row:hover,
+    .tv-inline-search-row.is-active {
+      background: #2a2e39;
+    }
+
+    .tv-inline-search-code {
+      font-size: 12px;
+      font-weight: 700;
+      color: #d1d4dc;
+    }
+
+    .tv-inline-search-name {
+      font-size: 12px;
+      color: #b2b5be;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tv-inline-search-exchange {
+      font-size: 10px;
+      color: #787b86;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .tv-inline-search-empty {
+      padding: 12px 10px;
+      font-size: 12px;
+      color: #787b86;
+    }
+
     .tv-symbol-btn:hover {
       background: #2a2e39;
     }
@@ -1449,16 +1573,26 @@
           class="w-full flex-1 flex flex-col overflow-hidden min-h-[480px]"
         >
           <div class="tv-topbar">
-            <button type="button" id="chart-symbol-trigger" class="tv-symbol-btn" title="Symbol search (Ctrl+K)">
-              <svg class="tv-symbol-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <circle cx="11" cy="11" r="7"></circle>
-                <path d="M20 20l-4-4"></path>
-              </svg>
-              <span class="tv-symbol-btn-text">
-                <span id="chart-symbol-code" class="tv-symbol-code">BTCUSD</span>
-                <span id="chart-symbol-name" class="tv-symbol-name">Bitcoin / U.S. dollar</span>
-              </span>
-            </button>
+            <div class="tv-symbol-search-wrap" id="tv-symbol-search-wrap">
+              <label class="tv-symbol-search" for="chart-symbol-input">
+                <svg class="tv-symbol-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7"></circle>
+                  <path d="M20 20l-4-4"></path>
+                </svg>
+                <input
+                  type="text"
+                  id="chart-symbol-input"
+                  class="tv-symbol-search-input"
+                  data-inline-search-input
+                  placeholder="Search NIFTY, CRUDE, GOLD…"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-label="Search symbol"
+                />
+                <kbd class="tv-symbol-search-kbd">Ctrl+K</kbd>
+              </label>
+              <div class="tv-symbol-search-dropdown hidden" data-inline-search-dropdown role="listbox" aria-label="Symbol results"></div>
+            </div>
 
             <div class="tv-intervals">
               <button type="button" class="tv-interval tf-btn" data-interval="1m">1m</button>
@@ -1471,7 +1605,7 @@
             </div>
 
             <div class="tv-toolbar-actions">
-              <button type="button" id="tv-watchlist-toggle" class="tv-action-btn">Markets</button>
+              <button type="button" id="tv-watchlist-toggle" class="tv-action-btn active">Markets</button>
               <button type="button" id="zoom-out" class="tv-action-btn" aria-label="Zoom out">−</button>
               <button type="button" id="zoom-in" class="tv-action-btn" aria-label="Zoom in">+</button>
               <span id="chart-status">Connecting…</span>
@@ -1488,7 +1622,7 @@
             <span class="tv-legend-item"><span>Vol</span><span data-legend-vol>—</span></span>
           </div>
 
-          <div id="tv-watchlist-panel" class="tv-watchlist-panel collapsed">
+          <div id="tv-watchlist-panel" class="tv-watchlist-panel">
             <div id="symbol-toolbar-mount" class="symbol-toolbar-mount"></div>
           </div>
 
@@ -1694,7 +1828,8 @@
   <script src="js/binance-feed.js?v=8"></script>
   <script src="js/yahoo-feed.js?v=14"></script>
   <script src="js/universal-market-data.js?v=15"></script>
-  <script src="js/symbol-search-modal.js?v=3"></script>
+  <script src="js/symbol-search-modal.js?v=4"></script>
+  <script src="js/inline-symbol-search.js?v=1"></script>
   <script src="js/astro-marker-layer.js?v=9"></script>
   <script src="js/overlay-manager.js?v=8"></script>
   <script src="js/darkpulsr-chart.js?v=11"></script>
@@ -1966,17 +2101,15 @@
         document.getElementById('zoom-out')
       );
 
-      const chartSymbolCode = document.getElementById('chart-symbol-code');
-      const chartSymbolName = document.getElementById('chart-symbol-name');
+      const chartSymbolInput = document.getElementById('chart-symbol-input');
+      let inlineSymbolSearch = null;
+      let activeChartKey = 'BTC';
 
       function updateSymbolBar(symbolKey, item) {
+        activeChartKey = symbolKey;
         const cfg = window.UniversalMarketData?.resolve(symbolKey);
-        const ex = item?.exchange || cfg?.exchange || '';
-        const raw = item?.symbol || cfg?.label || symbolKey;
-        const code = raw.includes(':') ? raw : (ex ? `${ex}:${raw.replace(/^\^/, '')}` : raw);
-        const name = item?.displayName || cfg?.label || symbolKey;
-        if (chartSymbolCode) chartSymbolCode.textContent = code;
-        if (chartSymbolName) chartSymbolName.textContent = name;
+        const label = item?.displayName || cfg?.label || symbolKey;
+        inlineSymbolSearch?.setDisplay(symbolKey, label);
       }
 
       function selectChartSymbol(symbolKey) {
@@ -2033,9 +2166,14 @@
 
       symbolSearchModal.enableTypeToSearch();
 
-      const chartSymbolTrigger = document.getElementById('chart-symbol-trigger');
-      if (chartSymbolTrigger) {
-        chartSymbolTrigger.addEventListener('click', () => symbolSearchModal.open());
+      const searchWrap = document.getElementById('tv-symbol-search-wrap');
+      if (searchWrap && window.InlineSymbolSearch) {
+        inlineSymbolSearch = new InlineSymbolSearch(searchWrap, {
+          getActiveKey: () => activeChartKey,
+          onSelect(item) {
+            symbolSearchModal.selectFromSearch(item);
+          },
+        });
       }
 
       document.addEventListener('keydown', (event) => {

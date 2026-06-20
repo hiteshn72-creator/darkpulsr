@@ -116,6 +116,7 @@
       chartKey: key,
       symbol: tvSymbol,
       displayName: cfg.label,
+      shortLabel: cfg.shortLabel || key,
       quoteType: quoteTypes[cfg.category] || 'INDEX',
       typeTags: [cfg.category, String(cfg.exchange || '').toLowerCase()].filter(Boolean),
       exchange: cfg.exchange || 'Yahoo',
@@ -140,19 +141,33 @@
     return items.filter((item) => item.category === filterCat);
   }
 
+  function normalizeSearchText(text) {
+    return String(text || '')
+      .toLowerCase()
+      .replace(/&/g, ' and ')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
   function matchesCatalogQuery(item, query) {
-    const q = String(query || '').trim().toLowerCase();
+    const q = String(query || '').trim();
     if (!q) return true;
-    const hay = [
+    const hay = normalizeSearchText([
       item.chartKey,
       item.symbol,
       item.displayName,
+      item.shortLabel,
       item.yahoo,
       item.exchange,
       ...(item.typeTags || []),
-    ].join(' ').toLowerCase();
-    const tokens = q.split(/\s+/).filter(Boolean);
-    return tokens.every((token) => hay.includes(token));
+    ].join(' '));
+    const compactHay = hay.replace(/\s+/g, '');
+    const tokens = normalizeSearchText(q).split(' ').filter(Boolean);
+    return tokens.every((token) => {
+      const compactToken = token.replace(/\s+/g, '');
+      return hay.includes(token) || (compactToken.length > 1 && compactHay.includes(compactToken));
+    });
   }
 
   function searchCatalog(query, activeCategory) {
@@ -681,6 +696,10 @@
       });
     }
 
+    selectFromSearch(item) {
+      this._selectItem(item);
+    }
+
     _selectItem(item) {
       if (item.source === 'coingecko' && window.UniversalMarketData) {
         window.UniversalMarketData.registerDynamic({
@@ -731,4 +750,11 @@
   }
 
   window.SymbolSearchModal = SymbolSearchModal;
+  window.DarkPulsrSymbolSearch = {
+    searchCatalog,
+    getAllCatalogItems,
+    getCatalogGroups,
+    catalogToSearchItem,
+    matchesCatalogQuery,
+  };
 })();
