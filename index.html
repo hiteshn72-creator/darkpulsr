@@ -235,6 +235,332 @@
       border: 1px solid #2a2e39;
     }
 
+    .dp-chart-toolbar-host {
+      flex-shrink: 0;
+      position: relative;
+      z-index: 15;
+    }
+
+    .dp-chart-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 10px;
+      min-height: 38px;
+      background: #ffffff;
+      border-bottom: 1px solid #e0e3eb;
+      color: #131722;
+      font-family: -apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+      font-size: 13px;
+    }
+
+    .dp-toolbar-section {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .dp-toolbar-left { flex-shrink: 0; }
+    .dp-toolbar-center { flex: 1; justify-content: center; flex-wrap: wrap; }
+    .dp-toolbar-right { flex-shrink: 0; margin-left: auto; }
+
+    .dp-toolbar-symbol {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: #131722;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .dp-toolbar-symbol:hover {
+      background: #f0f3fa;
+      border-color: #e0e3eb;
+    }
+
+    .dp-toolbar-symbol-label {
+      max-width: 140px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dp-toolbar-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 8px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: #131722;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .dp-toolbar-btn:hover:not(:disabled) {
+      background: #f0f3fa;
+      border-color: #e0e3eb;
+    }
+
+    .dp-toolbar-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .dp-toolbar-btn.is-active {
+      background: #e3efff;
+      border-color: #2962ff;
+      color: #2962ff;
+    }
+
+    .dp-toolbar-btn-icon {
+      padding: 4px 6px;
+    }
+
+    .dp-toolbar-btn-pill {
+      min-width: 52px;
+      justify-content: center;
+    }
+
+    .dp-toolbar-btn-text {
+      font-weight: 500;
+    }
+
+    .dp-toolbar-btn-save {
+      color: #2962ff;
+    }
+
+    .dp-toolbar-icon {
+      display: inline-flex;
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .dp-toolbar-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .dp-toolbar-icon-sm {
+      width: 14px;
+      height: 14px;
+      opacity: 0.7;
+    }
+
+    .dp-toolbar-dropdown-wrap {
+      position: relative;
+    }
+
+    .dp-toolbar-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      min-width: 120px;
+      max-height: 280px;
+      overflow-y: auto;
+      background: #ffffff;
+      border: 1px solid #e0e3eb;
+      border-radius: 6px;
+      box-shadow: 0 8px 24px rgba(19, 23, 34, 0.12);
+      z-index: 30;
+      padding: 4px;
+    }
+
+    .dp-toolbar-menu-wide {
+      min-width: 260px;
+    }
+
+    .dp-toolbar-menu.hidden {
+      display: none;
+    }
+
+    .dp-toolbar-menu-search {
+      width: 100%;
+      padding: 6px 8px;
+      margin-bottom: 4px;
+      border: 1px solid #e0e3eb;
+      border-radius: 4px;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .dp-toolbar-menu-search:focus {
+      border-color: #2962ff;
+    }
+
+    .dp-toolbar-menu-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+      padding: 7px 10px;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
+      color: #131722;
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .dp-toolbar-menu-item:hover {
+      background: #f0f3fa;
+    }
+
+    .dp-toolbar-menu-item.is-active {
+      background: #e3efff;
+      color: #2962ff;
+    }
+
+    .dp-toolbar-menu-item.hidden {
+      display: none;
+    }
+
+    .dp-toolbar-menu-meta {
+      font-size: 11px;
+      color: #787b86;
+    }
+
+    .dp-toolbar-status {
+      font-size: 11px;
+      color: #787b86;
+      padding-left: 6px;
+      white-space: nowrap;
+    }
+
+    .dp-toolbar-status.error {
+      color: #ef5350;
+    }
+
+    .dp-toolbar-panel {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 10px;
+      width: min(320px, calc(100vw - 24px));
+      background: #ffffff;
+      border: 1px solid #e0e3eb;
+      border-radius: 8px;
+      box-shadow: 0 12px 32px rgba(19, 23, 34, 0.14);
+      z-index: 40;
+    }
+
+    .dp-toolbar-panel.hidden {
+      display: none;
+    }
+
+    .dp-toolbar-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-bottom: 1px solid #e0e3eb;
+      font-size: 14px;
+    }
+
+    .dp-toolbar-panel-close {
+      border: none;
+      background: transparent;
+      font-size: 18px;
+      line-height: 1;
+      color: #787b86;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .dp-toolbar-panel-close:hover {
+      background: #f0f3fa;
+      color: #131722;
+    }
+
+    .dp-toolbar-panel-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .dp-toolbar-panel-note {
+      font-size: 12px;
+      color: #787b86;
+      margin: 0;
+    }
+
+    .dp-toolbar-field {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .dp-toolbar-field input,
+    .dp-toolbar-field select {
+      flex: 1;
+      max-width: 160px;
+      padding: 5px 8px;
+      border: 1px solid #e0e3eb;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .dp-toolbar-panel-action {
+      align-self: flex-start;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background: #2962ff;
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .dp-toolbar-overflow {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .dp-toolbar-collapse {
+        display: none;
+      }
+
+      .dp-toolbar-overflow {
+        display: block;
+      }
+
+      .dp-toolbar-center {
+        justify-content: flex-start;
+      }
+
+      .dp-toolbar-btn-text span:not(.dp-toolbar-icon) {
+        display: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .dp-toolbar-status {
+        display: none;
+      }
+
+      .dp-toolbar-symbol-label {
+        max-width: 88px;
+      }
+    }
+
     .tv-topbar {
       display: flex;
       align-items: center;
@@ -1340,44 +1666,7 @@
           id="darkpulsr-chart-container"
           class="w-full flex-1 flex flex-col overflow-hidden min-h-[480px]"
         >
-          <div class="tv-topbar">
-            <div class="tv-symbol-search-wrap" id="tv-symbol-search-wrap">
-              <label class="tv-symbol-search" for="chart-symbol-input">
-                <svg class="tv-symbol-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <circle cx="11" cy="11" r="7"></circle>
-                  <path d="M20 20l-4-4"></path>
-                </svg>
-                <input
-                  type="text"
-                  id="chart-symbol-input"
-                  class="tv-symbol-search-input"
-                  data-inline-search-input
-                  placeholder="Search NIFTY, CRUDE, GOLD…"
-                  autocomplete="off"
-                  spellcheck="false"
-                  aria-label="Search symbol"
-                />
-                <kbd class="tv-symbol-search-kbd">Ctrl+K</kbd>
-              </label>
-              <div class="tv-symbol-search-dropdown hidden" data-inline-search-dropdown role="listbox" aria-label="Symbol results"></div>
-            </div>
-
-            <div class="tv-intervals">
-              <button type="button" class="tv-interval tf-btn" data-interval="1m">1m</button>
-              <button type="button" class="tv-interval tf-btn" data-interval="5m">5m</button>
-              <button type="button" class="tv-interval tf-btn" data-interval="15m">15m</button>
-              <button type="button" class="tv-interval tf-btn active" data-interval="1h">1H</button>
-              <button type="button" class="tv-interval tf-btn" data-interval="4h">4H</button>
-              <button type="button" class="tv-interval tf-btn" data-interval="1d">D</button>
-              <button type="button" class="tv-interval tf-btn" data-interval="1w">W</button>
-            </div>
-
-            <div class="tv-toolbar-actions">
-              <button type="button" id="zoom-out" class="tv-action-btn" aria-label="Zoom out">−</button>
-              <button type="button" id="zoom-in" class="tv-action-btn" aria-label="Zoom in">+</button>
-              <span id="chart-status">Connecting…</span>
-            </div>
-          </div>
+          <div id="chart-toolbar-root" class="dp-chart-toolbar-host"></div>
 
           <div id="tv-legend" class="tv-legend">
             <span class="tv-legend-symbol" data-legend-symbol>BTC/USDT</span>
@@ -1592,9 +1881,9 @@
   <script src="js/yahoo-feed.js?v=14"></script>
   <script src="js/universal-market-data.js?v=16"></script>
   <script src="js/symbol-search-modal.js?v=4"></script>
-  <script src="js/inline-symbol-search.js?v=1"></script>
   <script src="js/astro-marker-layer.js?v=9"></script>
   <script src="js/overlay-manager.js?v=8"></script>
+  <script src="js/chart-toolbar.js?v=1"></script>
   <script src="js/darkpulsr-chart.js?v=11"></script>
   <script>
     const RASHIS = [
@@ -1825,7 +2114,76 @@
       updateMarketForecasts();
       checkAstroEvents();
 
-      const chartStatus = document.getElementById('chart-status');
+      const chartToolbarRoot = document.getElementById('chart-toolbar-root');
+      let chartToolbar = null;
+      let activeChartKey = 'BTC';
+      let activeTimeframe = '1h';
+      let symbolSearchModal = null;
+
+      function updateSymbolBar(symbolKey, item) {
+        activeChartKey = symbolKey;
+        const cfg = window.UniversalMarketData?.resolve(symbolKey);
+        const label = item?.displayName || cfg?.label || symbolKey;
+        chartToolbar?.setState({ symbol: symbolKey, symbolLabel: label });
+      }
+
+      function loadChartSymbol(symbolKey, metaItem, intervalOverride) {
+        document.querySelectorAll('.market-card[data-symbol]').forEach((card) => {
+          card.classList.toggle('chart-active', card.dataset.symbol === symbolKey);
+        });
+
+        const interval = intervalOverride || activeTimeframe || '1h';
+        const overlay = document.getElementById('chart-loading-overlay');
+        const loadingText = overlay?.querySelector('.chart-loading-text');
+        if (loadingText) loadingText.textContent = `Fetching ${symbolKey}…`;
+
+        return darkPulsrChart.loadSymbol(symbolKey, interval).then(() => {
+          overlayManager.refresh();
+          updateSymbolBar(symbolKey, metaItem);
+        }).catch(() => {
+          /* status set by chart engine */
+        });
+      }
+
+      function selectChartSymbol(symbolKey) {
+        const cfg = window.UniversalMarketData?.resolve(symbolKey);
+        updateSymbolBar(symbolKey, cfg ? { symbol: cfg.label, displayName: cfg.label } : null);
+        return loadChartSymbol(symbolKey);
+      }
+
+      function changeTimeframe(tf) {
+        activeTimeframe = tf;
+        chartToolbar?.setState({ timeframe: tf });
+        const symbol = activeChartKey || darkPulsrChart?.symbol || 'BTC';
+        const overlay = document.getElementById('chart-loading-overlay');
+        const loadingText = overlay?.querySelector('.chart-loading-text');
+        if (loadingText) loadingText.textContent = `Fetching ${symbol} · ${tf}…`;
+        return darkPulsrChart.loadSymbol(symbol, tf).then(() => overlayManager.refresh());
+      }
+
+      if (chartToolbarRoot && window.ChartToolbar) {
+        chartToolbar = new ChartToolbar(chartToolbarRoot, {
+          initialState: {
+            symbol: 'BTC',
+            symbolLabel: 'BTC/USDT',
+            timeframe: '1h',
+            statusText: 'Connecting…',
+          },
+          onSymbolSelect: () => symbolSearchModal?.open(),
+          onCompare: () => console.info('[ChartToolbar] Compare — coming soon'),
+          onTimeframeChange: (tf) => changeTimeframe(tf),
+          onSettings: () => console.info('[ChartToolbar] Settings opened'),
+          onIndicatorAdd: (id) => console.info('[ChartToolbar] Indicator — coming soon:', id),
+          onLayoutChange: (layout) => console.info('[ChartToolbar] Layout — coming soon:', layout),
+          onAlert: () => console.info('[ChartToolbar] Alert opened'),
+          onReplay: () => console.info('[ChartToolbar] Replay — coming soon'),
+          onUndo: () => console.info('[ChartToolbar] Undo — coming soon'),
+          onRedo: () => console.info('[ChartToolbar] Redo — coming soon'),
+          onSave: () => console.info('[ChartToolbar] Save — coming soon'),
+        });
+      }
+
+      const chartStatus = chartToolbar?.root?.querySelector('[data-tb-status]') || document.getElementById('chart-status');
 
       if (typeof LightweightCharts === 'undefined') {
         if (chartStatus) {
@@ -1859,47 +2217,9 @@
       const overlayManager = new OverlayManager(darkPulsrChart.getMarkerLayer());
       overlayManager.bindControlPanel(document.getElementById('overlay-control-panel'));
 
-      darkPulsrChart.bindZoomControls(
-        document.getElementById('zoom-in'),
-        document.getElementById('zoom-out')
-      );
+      darkPulsrChart.bindZoomControls(null, null);
 
-      const chartSymbolInput = document.getElementById('chart-symbol-input');
-      let inlineSymbolSearch = null;
-      let activeChartKey = 'BTC';
-
-      function updateSymbolBar(symbolKey, item) {
-        activeChartKey = symbolKey;
-        const cfg = window.UniversalMarketData?.resolve(symbolKey);
-        const label = item?.displayName || cfg?.label || symbolKey;
-        inlineSymbolSearch?.setDisplay(symbolKey, label);
-      }
-
-      function selectChartSymbol(symbolKey) {
-        const cfg = window.UniversalMarketData?.resolve(symbolKey);
-        updateSymbolBar(symbolKey, cfg ? { symbol: cfg.label, displayName: cfg.label } : null);
-        return loadChartSymbol(symbolKey);
-      }
-
-      function loadChartSymbol(symbolKey, metaItem) {
-        document.querySelectorAll('.market-card[data-symbol]').forEach((card) => {
-          card.classList.toggle('chart-active', card.dataset.symbol === symbolKey);
-        });
-
-        const interval = document.querySelector('.tf-btn.active')?.dataset.interval || '1h';
-        const overlay = document.getElementById('chart-loading-overlay');
-        const loadingText = overlay?.querySelector('.chart-loading-text');
-        if (loadingText) loadingText.textContent = `Fetching ${symbolKey}…`;
-
-        return darkPulsrChart.loadSymbol(symbolKey, interval).then(() => {
-          overlayManager.refresh();
-          updateSymbolBar(symbolKey, metaItem);
-        }).catch(() => {
-          /* status set by chart engine */
-        });
-      }
-
-      const symbolSearchModal = new SymbolSearchModal(
+      symbolSearchModal = new SymbolSearchModal(
         document.getElementById('symbol-search-modal'),
         {
           onSelect(symbolKey, item) {
@@ -1913,16 +2233,6 @@
 
       symbolSearchModal.enableTypeToSearch();
 
-      const searchWrap = document.getElementById('tv-symbol-search-wrap');
-      if (searchWrap && window.InlineSymbolSearch) {
-        inlineSymbolSearch = new InlineSymbolSearch(searchWrap, {
-          getActiveKey: () => activeChartKey,
-          onSelect(item) {
-            symbolSearchModal.selectFromSearch(item);
-          },
-        });
-      }
-
       document.addEventListener('keydown', (event) => {
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
           event.preventDefault();
@@ -1931,20 +2241,6 @@
       });
 
       selectChartSymbol('BTC');
-
-      document.querySelectorAll('.tf-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.tf-btn').forEach((b) => b.classList.remove('active'));
-          btn.classList.add('active');
-          const symbol = activeChartKey || darkPulsrChart.symbol || 'BTC';
-          const overlay = document.getElementById('chart-loading-overlay');
-          const loadingText = overlay?.querySelector('.chart-loading-text');
-          if (loadingText) loadingText.textContent = `Fetching ${symbol} · ${btn.dataset.interval}…`;
-          darkPulsrChart.loadSymbol(symbol, btn.dataset.interval).then(() => {
-            overlayManager.refresh();
-          });
-        });
-      });
 
       document.querySelectorAll('.market-card[data-symbol]').forEach((card) => {
         card.addEventListener('click', () => selectChartSymbol(card.dataset.symbol));
