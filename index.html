@@ -228,11 +228,32 @@
       flex-direction: column;
       overflow: hidden;
       border-radius: 0;
-      min-height: 520px;
-      height: clamp(480px, 58vh, 780px);
+      min-height: 560px;
+      height: clamp(520px, 68vh, 920px);
       flex: 1;
       background: #131722;
       border: 1px solid #2a2e39;
+    }
+
+    .tradingview-widget-container {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .tradingview-widget-container__widget {
+      flex: 1;
+      min-height: 480px;
+      width: 100%;
+    }
+
+    #tradingview_chart {
+      width: 100%;
+      height: 100%;
+      min-height: 480px;
     }
 
     .dp-chart-toolbar-host {
@@ -2104,37 +2125,10 @@
       <div class="flex flex-col flex-1 min-h-[520px] shrink-0 w-full neon-panel tv-panel-wrap">
         <div
           id="darkpulsr-chart-container"
-          class="w-full flex-1 flex flex-col overflow-hidden min-h-[480px]"
+          class="w-full flex-1 flex flex-col overflow-hidden min-h-[520px]"
         >
-          <div id="chart-toolbar-root" class="dp-chart-toolbar-host"></div>
-
-          <div id="tv-legend" class="tv-legend">
-            <span class="tv-legend-symbol" data-legend-symbol>BTC/USDT</span>
-            <span class="tv-legend-item"><span>O</span><span data-legend-o>—</span></span>
-            <span class="tv-legend-item"><span>H</span><span data-legend-h>—</span></span>
-            <span class="tv-legend-item"><span>L</span><span data-legend-l>—</span></span>
-            <span class="tv-legend-item"><span>C</span><span data-legend-c>—</span></span>
-            <span class="tv-legend-change" data-legend-change>—</span>
-            <span class="tv-legend-item"><span>Vol</span><span data-legend-vol>—</span></span>
-          </div>
-
-          <div class="tv-chart-body">
-            <aside class="tv-left-rail" aria-label="Drawing tools">
-              <button type="button" class="tv-rail-btn active" title="Cursor">↖</button>
-              <button type="button" class="tv-rail-btn" title="Trend line">╱</button>
-              <button type="button" class="tv-rail-btn" title="Fibonacci">φ</button>
-              <button type="button" class="tv-rail-btn" title="Text">T</button>
-              <button type="button" class="tv-rail-btn" title="Measure">⌗</button>
-            </aside>
-
-            <div class="tv-chart-main">
-              <div id="darkpulsr-chart-host" class="flex-1 min-h-0">
-                <div id="chart-loading-overlay" class="chart-loading-overlay" aria-hidden="true">
-                  <div class="chart-spinner"></div>
-                  <span class="chart-loading-text">Loading…</span>
-                </div>
-              </div>
-            </div>
+          <div class="tradingview-widget-container">
+            <div id="tradingview_chart" class="tradingview-widget-container__widget"></div>
           </div>
 
           <div class="tv-footer">
@@ -2300,7 +2294,6 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
   <script>
     (function () {
       const h = location.hostname;
@@ -2315,18 +2308,15 @@
           window.DARKPULSR_API_BASE = '';
         }
       }
+      /* dark = app chart panel · light = TradingView light screenshot style */
+      if (window.DARKPULSR_THEME == null) {
+        window.DARKPULSR_THEME = 'dark';
+      }
     })();
   </script>
-  <script src="js/binance-feed.js?v=8"></script>
-  <script src="js/yahoo-feed.js?v=14"></script>
   <script src="js/universal-market-data.js?v=16"></script>
-  <script src="js/symbol-search-modal.js?v=5"></script>
-  <script src="js/astro-marker-layer.js?v=9"></script>
-  <script src="js/overlay-manager.js?v=8"></script>
-  <script src="js/indicators-catalog.js?v=1"></script>
-  <script src="js/indicators-modal.js?v=1"></script>
-  <script src="js/chart-toolbar.js?v=4"></script>
-  <script src="js/darkpulsr-chart.js?v=13"></script>
+  <script src="https://s3.tradingview.com/tv.js" async></script>
+  <script src="js/tradingview-widget.js?v=1"></script>
   <script>
     const RASHIS = [
       'Mesha', 'Vrishabha', 'Mithuna', 'Karka', 'Simha', 'Kanya',
@@ -2556,198 +2546,41 @@
       updateMarketForecasts();
       checkAstroEvents();
 
-      const chartToolbarRoot = document.getElementById('chart-toolbar-root');
-      let chartToolbar = null;
-      let activeChartKey = 'BTC';
-      let activeTimeframe = '1h';
-      let symbolSearchModal = null;
-      let indicatorsModal = null;
+      let tvChartEmbed = null;
 
-      function updateSymbolBar(symbolKey, item) {
-        activeChartKey = symbolKey;
-        const cfg = window.UniversalMarketData?.resolve(symbolKey);
-        const label = item?.displayName || cfg?.label || symbolKey;
-        chartToolbar?.setState({ symbol: symbolKey, symbolLabel: label });
+      function initTradingViewChart() {
+        if (!window.TradingViewChartEmbed) return null;
+        tvChartEmbed = new TradingViewChartEmbed('tradingview_chart', {
+          symbol: 'NSE:NIFTY',
+          interval: 'D',
+          watchlistKeys: ['NIFTY', 'BANKNIFTY', 'SENSEX', 'NASDAQ', 'DAX', 'NIKKEI', 'BTC', 'GOLD'],
+        });
+        tvChartEmbed.init();
+        return tvChartEmbed;
       }
 
-      function syncCompareToolbar() {
-        chartToolbar?.setState({ compareSymbols: darkPulsrChart?.getCompareSymbols?.() || [] });
-      }
-
-      async function addCompareSymbol(symbolKey) {
-        if (!darkPulsrChart) return;
-        if (symbolKey === activeChartKey) {
-          chartToolbar?.setState({ statusText: 'Cannot compare with main symbol' });
+      function waitForTradingView(callback, attempt = 0) {
+        if (typeof TradingView !== 'undefined' && window.TradingViewChartEmbed) {
+          callback();
           return;
         }
-        try {
-          await darkPulsrChart.addCompare(symbolKey);
-          syncCompareToolbar();
-          const cfg = window.UniversalMarketData?.resolve(symbolKey);
-          const label = cfg?.shortLabel || cfg?.label || symbolKey;
-          chartToolbar?.setState({ statusText: `Compare: ${label} added` });
-        } catch (error) {
-          console.warn('[Compare]', error);
-          chartToolbar?.setState({
-            statusText: error?.message || 'Compare failed',
-          });
+        if (attempt > 60) {
+          console.error('[DarkPulsr] TradingView tv.js failed to load');
+          return;
         }
+        setTimeout(() => waitForTradingView(callback, attempt + 1), 250);
       }
 
-      function removeCompareSymbol(symbolKey) {
-        if (!darkPulsrChart) return;
-        darkPulsrChart.removeCompare(symbolKey);
-        syncCompareToolbar();
-      }
+      waitForTradingView(() => {
+        initTradingViewChart();
+      });
 
-      function loadChartSymbol(symbolKey, metaItem, intervalOverride) {
+      function selectChartSymbol(symbolKey) {
         document.querySelectorAll('.market-card[data-symbol]').forEach((card) => {
           card.classList.toggle('chart-active', card.dataset.symbol === symbolKey);
         });
-
-        if (darkPulsrChart?.hasCompare?.(symbolKey)) {
-          darkPulsrChart.removeCompare(symbolKey);
-        }
-
-        const interval = intervalOverride || activeTimeframe || '1h';
-        const overlay = document.getElementById('chart-loading-overlay');
-        const loadingText = overlay?.querySelector('.chart-loading-text');
-        if (loadingText) loadingText.textContent = `Fetching ${symbolKey}…`;
-
-        return darkPulsrChart.loadSymbol(symbolKey, interval).then(() => {
-          overlayManager.refresh();
-          updateSymbolBar(symbolKey, metaItem);
-          syncCompareToolbar();
-        }).catch(() => {
-          /* status set by chart engine */
-        });
+        tvChartEmbed?.setSymbol(symbolKey);
       }
-
-      function selectChartSymbol(symbolKey) {
-        const cfg = window.UniversalMarketData?.resolve(symbolKey);
-        updateSymbolBar(symbolKey, cfg ? { symbol: cfg.label, displayName: cfg.label } : null);
-        return loadChartSymbol(symbolKey);
-      }
-
-      function changeTimeframe(tf) {
-        activeTimeframe = tf;
-        chartToolbar?.setState({ timeframe: tf });
-        const symbol = activeChartKey || darkPulsrChart?.symbol || 'BTC';
-        const overlay = document.getElementById('chart-loading-overlay');
-        const loadingText = overlay?.querySelector('.chart-loading-text');
-        if (loadingText) loadingText.textContent = `Fetching ${symbol} · ${tf}…`;
-        return darkPulsrChart.loadSymbol(symbol, tf).then(() => {
-          overlayManager.refresh();
-          syncCompareToolbar();
-        });
-      }
-
-      if (chartToolbarRoot && window.ChartToolbar) {
-        chartToolbar = new ChartToolbar(chartToolbarRoot, {
-          initialState: {
-            symbol: 'BTC',
-            symbolLabel: 'BTC/USDT',
-            timeframe: '1h',
-            chartType: 'candles',
-            statusText: 'Connecting…',
-          },
-          onSymbolSelect: () => symbolSearchModal?.open(),
-          onCompare: () => symbolSearchModal?.openCompare(),
-          onCompareRemove: (key) => removeCompareSymbol(key),
-          onChartTypeChange: (typeId) => {
-            darkPulsrChart?.setChartType(typeId);
-          },
-          onTimeframeChange: (tf) => changeTimeframe(tf),
-          onSettings: () => console.info('[ChartToolbar] Settings opened'),
-          onIndicatorsOpen: () => indicatorsModal?.open(),
-          onIndicatorAdd: (item) => {
-            chartToolbar?.setState({ statusText: `${item.name || item.id} — overlay coming soon` });
-          },
-          onLayoutChange: (layout) => console.info('[ChartToolbar] Layout — coming soon:', layout),
-          onAlert: () => console.info('[ChartToolbar] Alert opened'),
-          onReplay: () => console.info('[ChartToolbar] Replay — coming soon'),
-          onUndo: () => console.info('[ChartToolbar] Undo — coming soon'),
-          onRedo: () => console.info('[ChartToolbar] Redo — coming soon'),
-          onSave: () => console.info('[ChartToolbar] Save — coming soon'),
-        });
-      }
-
-      const chartStatus = chartToolbar?.root?.querySelector('[data-tb-status]') || document.getElementById('chart-status');
-
-      if (typeof LightweightCharts === 'undefined') {
-        if (chartStatus) {
-          chartStatus.textContent = 'Chart library failed — check internet';
-          chartStatus.classList.add('error');
-        }
-        return;
-      }
-
-      let darkPulsrChart;
-      try {
-        darkPulsrChart = new DarkPulsrChart('darkpulsr-chart-host', {
-          feed: window.UniversalMarketData,
-          symbol: 'BTC',
-          interval: '1h',
-          statusEl: chartStatus,
-          spinnerEl: document.getElementById('chart-loading-overlay'),
-          legendEl: document.getElementById('tv-legend'),
-        });
-      } catch (error) {
-        console.error('[DarkPulsr] Chart boot failed:', error);
-        if (chartStatus) {
-          chartStatus.textContent = 'Chart init failed — refresh page';
-          chartStatus.classList.add('error');
-        }
-        return;
-      }
-
-      window.darkPulsrChart = darkPulsrChart;
-
-      const overlayManager = new OverlayManager(darkPulsrChart.getMarkerLayer());
-      overlayManager.bindControlPanel(document.getElementById('overlay-control-panel'));
-
-      darkPulsrChart.bindZoomControls(null, null);
-
-      symbolSearchModal = new SymbolSearchModal(
-        document.getElementById('symbol-search-modal'),
-        {
-          onSelect(symbolKey, item) {
-            loadChartSymbol(symbolKey, item);
-          },
-          onCompare(symbolKey) {
-            addCompareSymbol(symbolKey);
-          },
-          onSymbolBarUpdate(item) {
-            updateSymbolBar(item.chartKey, item);
-          },
-        }
-      );
-
-      symbolSearchModal.enableTypeToSearch();
-
-      if (window.IndicatorsModal) {
-        indicatorsModal = new IndicatorsModal({
-          onSelect(item) {
-            const active = chartToolbar?.getState().indicators || [];
-            const next = active.some((i) => i.id === item.id)
-              ? active
-              : [...active, { id: item.id, name: item.name }];
-            chartToolbar?.setState({
-              indicators: next,
-              statusText: `${item.name} selected — chart overlay coming soon`,
-            });
-          },
-        });
-      }
-
-      document.addEventListener('keydown', (event) => {
-        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
-          event.preventDefault();
-          symbolSearchModal.open();
-        }
-      });
-
-      selectChartSymbol('BTC');
 
       document.querySelectorAll('.market-card[data-symbol]').forEach((card) => {
         card.addEventListener('click', () => selectChartSymbol(card.dataset.symbol));
