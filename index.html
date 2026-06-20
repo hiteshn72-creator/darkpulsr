@@ -538,53 +538,6 @@
     .tv-legend-change.tv-up { color: #26a69a; }
     .tv-legend-change.tv-down { color: #ef5350; }
 
-    .tv-watchlist-panel {
-      max-height: 120px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 6px 10px;
-      background: #1e222d;
-      border-bottom: 1px solid #2a2e39;
-      flex-shrink: 0;
-    }
-
-    .tv-watchlist-panel.collapsed {
-      display: none;
-    }
-
-    .tv-watchlist-panel .panel-label {
-      color: #787b86;
-      font-size: 11px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      text-shadow: none;
-    }
-
-    .tv-watchlist-panel .symbol-btn {
-      padding: 3px 8px;
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0;
-      text-transform: none;
-      border-radius: 4px;
-      border: none;
-      background: #2a2e39;
-      color: #787b86;
-      font-family: inherit;
-    }
-
-    .tv-watchlist-panel .symbol-btn:hover {
-      color: #d1d4dc;
-      background: #363a45;
-      box-shadow: none;
-    }
-
-    .tv-watchlist-panel .symbol-btn.active {
-      color: #2962ff;
-      background: rgba(41, 98, 255, 0.18);
-      box-shadow: none;
-    }
-
     .tv-chart-body {
       display: flex;
       flex: 1;
@@ -1605,7 +1558,6 @@
             </div>
 
             <div class="tv-toolbar-actions">
-              <button type="button" id="tv-watchlist-toggle" class="tv-action-btn active">Markets</button>
               <button type="button" id="zoom-out" class="tv-action-btn" aria-label="Zoom out">−</button>
               <button type="button" id="zoom-in" class="tv-action-btn" aria-label="Zoom in">+</button>
               <span id="chart-status">Connecting…</span>
@@ -1620,10 +1572,6 @@
             <span class="tv-legend-item"><span>C</span><span data-legend-c>—</span></span>
             <span class="tv-legend-change" data-legend-change>—</span>
             <span class="tv-legend-item"><span>Vol</span><span data-legend-vol>—</span></span>
-          </div>
-
-          <div id="tv-watchlist-panel" class="tv-watchlist-panel">
-            <div id="symbol-toolbar-mount" class="symbol-toolbar-mount"></div>
           </div>
 
           <div class="tv-chart-body">
@@ -2118,24 +2066,10 @@
         return loadChartSymbol(symbolKey);
       }
 
-      window.UniversalMarketData.renderToolbar(
-        document.getElementById('symbol-toolbar-mount'),
-        (key) => selectChartSymbol(key),
-        { activeKey: 'BTC' }
-      );
-
       function loadChartSymbol(symbolKey, metaItem) {
-        window.UniversalMarketData?.setActiveToolbarSymbol(symbolKey);
-        document.querySelectorAll('.symbol-btn').forEach((b) => {
-          b.classList.toggle('active', b.dataset.symbol === symbolKey);
-          b.classList.remove('loading');
-        });
         document.querySelectorAll('.market-card[data-symbol]').forEach((card) => {
           card.classList.toggle('chart-active', card.dataset.symbol === symbolKey);
         });
-
-        const activeBtn = document.querySelector(`.symbol-btn[data-symbol="${symbolKey}"]`);
-        if (activeBtn) activeBtn.classList.add('loading');
 
         const interval = document.querySelector('.tf-btn.active')?.dataset.interval || '1h';
         const overlay = document.getElementById('chart-loading-overlay');
@@ -2147,8 +2081,6 @@
           updateSymbolBar(symbolKey, metaItem);
         }).catch(() => {
           /* status set by chart engine */
-        }).finally(() => {
-          document.querySelectorAll('.symbol-btn').forEach((b) => b.classList.remove('loading'));
         });
       }
 
@@ -2183,24 +2115,13 @@
         }
       });
 
-      const watchlistToggle = document.getElementById('tv-watchlist-toggle');
-      const watchlistPanel = document.getElementById('tv-watchlist-panel');
-      if (watchlistToggle && watchlistPanel) {
-        watchlistToggle.addEventListener('click', () => {
-          watchlistPanel.classList.toggle('collapsed');
-          watchlistToggle.classList.toggle('active');
-        });
-      }
-
       selectChartSymbol('BTC');
 
       document.querySelectorAll('.tf-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('.tf-btn').forEach((b) => b.classList.remove('active'));
           btn.classList.add('active');
-          const symbol = document.querySelector('.symbol-btn.active')?.dataset.symbol
-            || darkPulsrChart.symbol
-            || 'BTC';
+          const symbol = activeChartKey || darkPulsrChart.symbol || 'BTC';
           const overlay = document.getElementById('chart-loading-overlay');
           const loadingText = overlay?.querySelector('.chart-loading-text');
           if (loadingText) loadingText.textContent = `Fetching ${symbol} · ${btn.dataset.interval}…`;
