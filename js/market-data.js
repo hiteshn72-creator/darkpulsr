@@ -21,6 +21,18 @@ const DARKPULSR_SYMBOLS = {
     yahoo: '^NSEI',
     live: false,
   },
+  DAX: {
+    label: 'DAX',
+    source: 'yahoo',
+    yahoo: '^GDAXI',
+    live: false,
+  },
+  NIKKEI: {
+    label: 'Nikkei 225',
+    source: 'yahoo',
+    yahoo: '^N225',
+    live: false,
+  },
   NASDAQ: {
     label: 'NASDAQ',
     source: 'yahoo',

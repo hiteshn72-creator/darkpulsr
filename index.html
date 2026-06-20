@@ -284,6 +284,23 @@
       margin-left: auto;
     }
 
+    .chart-feed-note {
+      font-size: 0.55rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 215, 0, 0.55);
+      padding: 4px 12px 0;
+    }
+
+    .market-card[data-symbol] {
+      cursor: pointer;
+    }
+
+    .market-card[data-symbol].chart-active {
+      border-color: rgba(255, 215, 0, 0.55);
+      box-shadow: 0 0 18px rgba(255, 215, 0, 0.15);
+    }
+
     .market-card {
       background: rgba(5, 5, 5, 0.55);
       backdrop-filter: blur(10px);
@@ -500,12 +517,47 @@
       </div>
 
       <div class="flex flex-col flex-1 min-h-[520px] shrink-0 w-full neon-panel">
-        <p class="viewport-label">// TRADINGVIEW ADVANCED TERMINAL · BINANCE:BTCUSDT</p>
+        <p class="viewport-label">// DARKPULSR GLOBAL TERMINAL · CRYPTO + WORLD STOCKS</p>
         <div
           id="darkpulsr-chart-container"
           class="w-full flex-1 flex flex-col overflow-hidden min-h-[480px]"
         >
-          <div id="tradingview-advanced-chart" class="tradingview-widget-host"></div>
+          <div class="chart-toolbar">
+            <span class="panel-label">Crypto</span>
+            <button type="button" class="symbol-btn active" data-symbol="BTC">BTC</button>
+            <button type="button" class="symbol-btn" data-symbol="ETH">ETH</button>
+
+            <span class="panel-label" style="margin-left: 10px;">World</span>
+            <button type="button" class="symbol-btn" data-symbol="NIFTY">NIFTY</button>
+            <button type="button" class="symbol-btn" data-symbol="NASDAQ">NASDAQ</button>
+            <button type="button" class="symbol-btn" data-symbol="DAX">DAX</button>
+            <button type="button" class="symbol-btn" data-symbol="NIKKEI">NIKKEI</button>
+            <button type="button" class="symbol-btn" data-symbol="GOLD">GOLD</button>
+
+            <span class="panel-label" style="margin-left: 10px;">TF</span>
+            <button type="button" class="tf-btn" data-interval="5m">5M</button>
+            <button type="button" class="tf-btn active" data-interval="1h">1H</button>
+            <button type="button" class="tf-btn" data-interval="1d">1D</button>
+
+            <span id="chart-status">Connecting…</span>
+          </div>
+
+          <p id="chart-feed-note" class="chart-feed-note">Crypto = live 24/7 · World indices = Yahoo Finance (no TradingView block)</p>
+
+          <div id="darkpulsr-chart-host" class="flex-1 min-h-0"></div>
+
+          <div id="overlay-control-panel" class="overlay-control-panel">
+            <span class="panel-label">Astro Overlay</span>
+            <button type="button" class="overlay-toggle active" data-overlay="moonChange">Moon Change</button>
+            <button type="button" class="overlay-toggle" data-overlay="nextMoonChange">Next Moon Δ</button>
+          </div>
+
+          <div class="zoom-control-panel">
+            <span class="panel-label">Zoom</span>
+            <button type="button" id="zoom-in" class="zoom-btn" aria-label="Zoom in">+</button>
+            <button type="button" id="zoom-out" class="zoom-btn" aria-label="Zoom out">−</button>
+            <span class="panel-label" style="margin-left: 8px; opacity: 0.6;">Scroll wheel · Drag to pan</span>
+          </div>
         </div>
       </div>
 
@@ -517,7 +569,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3">
 
-          <article class="market-card rounded-lg flex flex-col gap-3">
+          <article class="market-card rounded-lg flex flex-col gap-3" data-symbol="NIFTY" title="Load NIFTY chart">
             <div class="flex items-center justify-between">
               <h4 class="text-sm font-semibold text-electric-gold">NSE (NIFTY)</h4>
               <span class="text-[10px] uppercase tracking-wider astro-label">India</span>
@@ -529,7 +581,7 @@
             <p id="nse-forecast" class="text-xs text-electric-gold"></p>
           </article>
 
-          <article class="market-card rounded-lg flex flex-col gap-3">
+          <article class="market-card rounded-lg flex flex-col gap-3" data-symbol="NASDAQ" title="Load NASDAQ chart">
             <div class="flex items-center justify-between">
               <h4 class="text-sm font-semibold text-electric-gold">NASDAQ</h4>
               <span class="text-[10px] uppercase tracking-wider astro-label">USA</span>
@@ -541,7 +593,7 @@
             <p id="nasdaq-forecast" class="text-xs text-electric-gold"></p>
           </article>
 
-          <article class="market-card rounded-lg flex flex-col gap-3">
+          <article class="market-card rounded-lg flex flex-col gap-3" data-symbol="DAX" title="Load DAX chart">
             <div class="flex items-center justify-between">
               <h4 class="text-sm font-semibold text-electric-gold">DAX</h4>
               <span class="text-[10px] uppercase tracking-wider astro-label">Germany</span>
@@ -553,7 +605,7 @@
             <p id="dax-forecast" class="text-xs text-electric-gold"></p>
           </article>
 
-          <article class="market-card rounded-lg flex flex-col gap-3">
+          <article class="market-card rounded-lg flex flex-col gap-3" data-symbol="NIKKEI" title="Load Nikkei chart">
             <div class="flex items-center justify-between">
               <h4 class="text-sm font-semibold text-electric-gold">Nikkei 225</h4>
               <span class="text-[10px] uppercase tracking-wider astro-label">Japan</span>
@@ -565,7 +617,7 @@
             <p id="nikkei-forecast" class="text-xs text-electric-gold"></p>
           </article>
 
-          <article class="market-card rounded-lg flex flex-col gap-3">
+          <article class="market-card rounded-lg flex flex-col gap-3" data-symbol="BTC" title="Load BTC chart">
             <div class="flex items-center justify-between">
               <h4 class="text-sm font-semibold text-electric-gold">BTC / Crypto</h4>
               <span class="text-[10px] uppercase tracking-wider astro-label">Global</span>
@@ -577,7 +629,7 @@
             <p id="btc-forecast" class="text-xs text-electric-gold"></p>
           </article>
 
-          <article class="market-card rounded-lg flex flex-col gap-3">
+          <article class="market-card rounded-lg flex flex-col gap-3" data-symbol="GOLD" title="Load Gold chart">
             <div class="flex items-center justify-between">
               <h4 class="text-sm font-semibold text-electric-gold">Gold (XAU)</h4>
               <span class="text-[10px] uppercase tracking-wider astro-label">Commodity</span>
@@ -600,8 +652,13 @@
     <span class="footer-brand">DarkPulsr</span> | Powered by Astro_Hiteshh | Advanced Astro-Financial Analytics
   </footer>
 
-  <script src="https://s3.tradingview.com/tv.js"></script>
-  <script src="js/tradingview-advanced.js"></script>
+  <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="js/binance-feed.js"></script>
+  <script src="js/yahoo-feed.js"></script>
+  <script src="js/market-data.js"></script>
+  <script src="js/astro-marker-layer.js"></script>
+  <script src="js/overlay-manager.js"></script>
+  <script src="js/darkpulsr-chart.js"></script>
   <script>
     const RASHIS = [
       'Mesha', 'Vrishabha', 'Mithuna', 'Karka', 'Simha', 'Kanya',
@@ -831,7 +888,55 @@
       updateMarketForecasts();
       checkAstroEvents();
 
-      initTradingViewAdvancedChart('tradingview-advanced-chart');
+      const chartStatus = document.getElementById('chart-status');
+      const darkPulsrChart = new DarkPulsrChart('darkpulsr-chart-host', {
+        feed: window.MarketData,
+        symbol: 'BTC',
+        interval: '1h',
+        statusEl: chartStatus,
+      });
+
+      const overlayManager = new OverlayManager(darkPulsrChart.getMarkerLayer());
+      overlayManager.bindControlPanel(document.getElementById('overlay-control-panel'));
+
+      darkPulsrChart.bindZoomControls(
+        document.getElementById('zoom-in'),
+        document.getElementById('zoom-out')
+      );
+
+      function selectChartSymbol(symbolKey) {
+        document.querySelectorAll('.symbol-btn').forEach((b) => {
+          b.classList.toggle('active', b.dataset.symbol === symbolKey);
+        });
+        document.querySelectorAll('.market-card[data-symbol]').forEach((card) => {
+          card.classList.toggle('chart-active', card.dataset.symbol === symbolKey);
+        });
+        const interval = document.querySelector('.tf-btn.active')?.dataset.interval || '1h';
+        return darkPulsrChart.loadSymbol(symbolKey, interval).then(() => {
+          overlayManager.refresh();
+        });
+      }
+
+      selectChartSymbol('BTC');
+
+      document.querySelectorAll('.symbol-btn').forEach((btn) => {
+        btn.addEventListener('click', () => selectChartSymbol(btn.dataset.symbol));
+      });
+
+      document.querySelectorAll('.tf-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tf-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          const symbol = document.querySelector('.symbol-btn.active')?.dataset.symbol || 'BTC';
+          darkPulsrChart.loadSymbol(symbol, btn.dataset.interval).then(() => {
+            overlayManager.refresh();
+          });
+        });
+      });
+
+      document.querySelectorAll('.market-card[data-symbol]').forEach((card) => {
+        card.addEventListener('click', () => selectChartSymbol(card.dataset.symbol));
+      });
 
       const dismissBtn = document.getElementById('astro-alert-dismiss');
       if (dismissBtn) {

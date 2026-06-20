@@ -15,19 +15,22 @@ const YahooFeed = {
   },
 
   async _fetchJson(url) {
-    try {
-      const direct = await fetch(url);
-      if (direct.ok) return direct.json();
-    } catch (_) {
-      /* direct fetch blocked by CORS — try proxy */
+    const attempts = [
+      () => fetch(url),
+      () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`),
+      () => fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`),
+    ];
+
+    for (const attempt of attempts) {
+      try {
+        const response = await attempt();
+        if (response.ok) return response.json();
+      } catch (_) {
+        /* try next proxy */
+      }
     }
 
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-    const proxied = await fetch(proxyUrl);
-    if (!proxied.ok) {
-      throw new Error(`Yahoo chart failed: ${proxied.status}`);
-    }
-    return proxied.json();
+    throw new Error(`Yahoo chart unreachable for ${url}`);
   },
 
   async fetchKlines(yahooSymbol, interval = '1h') {
