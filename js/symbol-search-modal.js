@@ -38,6 +38,8 @@
     { chartKey: 'AAPL', symbol: 'NASDAQ:AAPL', displayName: 'Apple Inc.', exchange: 'NASDAQ', quoteType: 'EQUITY', typeTags: ['stock', 'equity'], source: 'yahoo', yahoo: 'AAPL', category: 'stock' },
     { chartKey: 'TSLA', symbol: 'NASDAQ:TSLA', displayName: 'Tesla, Inc.', exchange: 'NASDAQ', quoteType: 'EQUITY', typeTags: ['stock', 'equity'], source: 'yahoo', yahoo: 'TSLA', category: 'stock' },
     { chartKey: 'GOLD', symbol: 'COMEX:GC', displayName: 'Gold Futures', exchange: 'COMEX', quoteType: 'FUTURE', typeTags: ['future', 'commodity'], source: 'catalog', category: 'commodity' },
+    { chartKey: 'CRUDE', symbol: 'NYMEX:CL', displayName: 'WTI Crude Oil', exchange: 'NYMEX', quoteType: 'FUTURE', typeTags: ['future', 'oil'], source: 'catalog', category: 'commodity' },
+    { chartKey: 'NATGAS', symbol: 'NYMEX:NG', displayName: 'Natural Gas', exchange: 'NYMEX', quoteType: 'FUTURE', typeTags: ['future', 'energy'], source: 'catalog', category: 'commodity' },
     { chartKey: 'EURUSD=X', symbol: 'FX:EURUSD', displayName: 'Euro / U.S. Dollar', exchange: 'Forex', quoteType: 'CURRENCY', typeTags: ['forex', 'currency'], source: 'yahoo', yahoo: 'EURUSD=X', category: 'forex' },
   ];
 

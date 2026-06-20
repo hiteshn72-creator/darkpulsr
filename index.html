@@ -579,6 +579,10 @@
       border-bottom: 1px solid rgba(157, 78, 221, 0.15);
     }
 
+    .symbol-toolbar-mount {
+      display: contents;
+    }
+
     .overlay-control-panel,
     .zoom-control-panel {
       display: flex;
@@ -1138,22 +1142,7 @@
               <span class="chart-symbol-kbd">Ctrl+K</span>
             </button>
 
-            <span class="panel-label">Crypto</span>
-            <button type="button" class="symbol-btn active" data-symbol="BTC">BTC</button>
-            <button type="button" class="symbol-btn" data-symbol="ETH">ETH</button>
-
-            <span class="panel-label" style="margin-left: 10px;">World</span>
-            <button type="button" class="symbol-btn" data-symbol="NIFTY">NIFTY</button>
-            <button type="button" class="symbol-btn" data-symbol="SENSEX">SENSEX</button>
-            <button type="button" class="symbol-btn" data-symbol="BANKNIFTY">BANK NIFTY</button>
-            <button type="button" class="symbol-btn" data-symbol="NASDAQ">NASDAQ</button>
-            <button type="button" class="symbol-btn" data-symbol="DAX">DAX</button>
-            <button type="button" class="symbol-btn" data-symbol="NIKKEI">NIKKEI</button>
-            <button type="button" class="symbol-btn" data-symbol="HSI">HANG SENG</button>
-            <button type="button" class="symbol-btn" data-symbol="FTSE">FTSE</button>
-            <button type="button" class="symbol-btn" data-symbol="CAC40">CAC 40</button>
-            <button type="button" class="symbol-btn" data-symbol="SHANGHAI">SHANGHAI</button>
-            <button type="button" class="symbol-btn" data-symbol="GOLD">GOLD</button>
+            <div id="symbol-toolbar-mount" class="symbol-toolbar-mount"></div>
 
             <span class="panel-label" style="margin-left: 10px;">TF</span>
             <button type="button" class="tf-btn" data-interval="5m">5M</button>
@@ -1163,7 +1152,7 @@
             <span id="chart-status">Connecting…</span>
           </div>
 
-          <p id="chart-feed-note" class="chart-feed-note">Run start.cmd (npm start) for Yahoo indices · Crypto works via Binance · Ctrl+K search</p>
+          <p id="chart-feed-note" class="chart-feed-note">Yahoo via Render API · Crypto Binance live · Ctrl+K search any symbol</p>
 
           <div id="darkpulsr-chart-host" class="flex-1 min-h-0">
             <div id="chart-loading-overlay" class="chart-loading-overlay" aria-hidden="true">
@@ -1358,7 +1347,7 @@
   </script>
   <script src="js/binance-feed.js?v=7"></script>
   <script src="js/yahoo-feed.js?v=13"></script>
-  <script src="js/universal-market-data.js?v=11"></script>
+  <script src="js/universal-market-data.js?v=15"></script>
   <script src="js/symbol-search-modal.js?v=2"></script>
   <script src="js/astro-marker-layer.js?v=9"></script>
   <script src="js/overlay-manager.js?v=8"></script>
@@ -1635,12 +1624,7 @@
 
       function updateSymbolBar(symbolKey, item) {
         const cfg = window.UniversalMarketData?.resolve(symbolKey);
-        const exchangeMap = {
-          BTC: 'Crypto', ETH: 'Crypto', NIFTY: 'NSE', SENSEX: 'BSE', BANKNIFTY: 'NSE',
-          NASDAQ: 'NASDAQ', DAX: 'XETRA', NIKKEI: 'TSE', HSI: 'HKEX', FTSE: 'LSE',
-          CAC40: 'EURONEXT', SHANGHAI: 'SSE', GOLD: 'COMEX',
-        };
-        const ex = item?.exchange || exchangeMap[symbolKey] || '';
+        const ex = item?.exchange || cfg?.exchange || '';
         const raw = item?.symbol || cfg?.label || symbolKey;
         const code = raw.includes(':') ? raw : (ex ? `${ex}:${raw.replace(/^\^/, '')}` : raw);
         const name = item?.displayName || cfg?.label || symbolKey;
@@ -1648,7 +1632,20 @@
         if (chartSymbolName) chartSymbolName.textContent = name;
       }
 
+      function selectChartSymbol(symbolKey) {
+        const cfg = window.UniversalMarketData?.resolve(symbolKey);
+        updateSymbolBar(symbolKey, cfg ? { symbol: cfg.label, displayName: cfg.label } : null);
+        return loadChartSymbol(symbolKey);
+      }
+
+      window.UniversalMarketData.renderToolbar(
+        document.getElementById('symbol-toolbar-mount'),
+        (key) => selectChartSymbol(key),
+        { activeKey: 'BTC' }
+      );
+
       function loadChartSymbol(symbolKey, metaItem) {
+        window.UniversalMarketData?.setActiveToolbarSymbol(symbolKey);
         document.querySelectorAll('.symbol-btn').forEach((b) => {
           b.classList.toggle('active', b.dataset.symbol === symbolKey);
           b.classList.remove('loading');
@@ -1675,20 +1672,10 @@
         });
       }
 
-      function selectChartSymbol(symbolKey) {
-        const cfg = window.UniversalMarketData?.resolve(symbolKey);
-        updateSymbolBar(symbolKey, cfg ? {
-          symbol: cfg.label,
-          displayName: cfg.label,
-        } : null);
-        return loadChartSymbol(symbolKey);
-      }
-
       const symbolSearchModal = new SymbolSearchModal(
         document.getElementById('symbol-search-modal'),
         {
           onSelect(symbolKey, item) {
-            document.querySelectorAll('.symbol-btn').forEach((b) => b.classList.remove('active'));
             loadChartSymbol(symbolKey, item);
           },
           onSymbolBarUpdate(item) {
@@ -1712,10 +1699,6 @@
       });
 
       selectChartSymbol('BTC');
-
-      document.querySelectorAll('.symbol-btn').forEach((btn) => {
-        btn.addEventListener('click', () => selectChartSymbol(btn.dataset.symbol));
-      });
 
       document.querySelectorAll('.tf-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
