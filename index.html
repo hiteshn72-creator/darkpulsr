@@ -217,25 +217,113 @@
     }
 
     #darkpulsr-chart-container {
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
       border-radius: 4px;
       min-height: 480px;
-      flex: 1;
-    }
-
-    .tradingview-widget-host,
-    #tradingview-advanced-chart {
-      width: 100%;
-      height: 100%;
-      min-height: 460px;
+      height: clamp(420px, 52vh, 680px);
       flex: 1;
     }
 
     #darkpulsr-chart-host {
       position: relative;
-      flex: 1;
-      min-height: 360px;
+      flex: 1 1 auto;
+      min-height: 400px;
       width: 100%;
+      height: 100%;
+    }
+
+    .chart-loading-overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+      background: rgba(5, 5, 5, 0.72);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 6;
+      pointer-events: none;
+    }
+
+    .chart-loading-overlay.active {
+      display: flex;
+    }
+
+    .chart-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(157, 78, 221, 0.25);
+      border-top-color: #FFD700;
+      border-radius: 50%;
+      animation: chart-spin 0.85s linear infinite;
+      box-shadow: 0 0 16px rgba(255, 215, 0, 0.25);
+    }
+
+    .chart-loading-text {
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(0, 240, 255, 0.85);
+    }
+
+    @keyframes chart-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .ticker-search {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ticker-input {
+      width: 140px;
+      padding: 5px 10px;
+      font-size: 0.65rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-radius: 3px;
+      border: 1px solid rgba(157, 78, 221, 0.45);
+      background: rgba(5, 5, 5, 0.8);
+      color: #FFD700;
+      outline: none;
+    }
+
+    .ticker-input:focus {
+      border-color: rgba(0, 240, 255, 0.55);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+    }
+
+    .ticker-go-btn {
+      padding: 5px 12px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border-radius: 3px;
+      border: 1px solid rgba(255, 215, 0, 0.45);
+      background: rgba(255, 215, 0, 0.08);
+      color: #FFD700;
+      cursor: pointer;
+    }
+
+    .ticker-go-btn:hover {
+      border-color: #FFD700;
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
+    }
+
+    .symbol-btn.loading {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    #darkpulsr-chart-host canvas {
+      display: block;
     }
 
     .astro-marker-canvas {
@@ -521,7 +609,7 @@
       </div>
 
       <div class="flex flex-col flex-1 min-h-[520px] shrink-0 w-full neon-panel">
-        <p class="viewport-label">// DARKPULSR GLOBAL TERMINAL · CRYPTO + WORLD STOCKS</p>
+        <p class="viewport-label">// DARKPULSR GLOBAL TERMINAL · UNIVERSAL MARKET DATA</p>
         <div
           id="darkpulsr-chart-container"
           class="w-full flex-1 flex flex-col overflow-hidden min-h-[480px]"
@@ -535,7 +623,6 @@
             <button type="button" class="symbol-btn" data-symbol="NIFTY">NIFTY</button>
             <button type="button" class="symbol-btn" data-symbol="NASDAQ">NASDAQ</button>
             <button type="button" class="symbol-btn" data-symbol="DAX">DAX</button>
-            <button type="button" class="symbol-btn" data-symbol="NIKKEI">NIKKEI</button>
             <button type="button" class="symbol-btn" data-symbol="GOLD">GOLD</button>
 
             <span class="panel-label" style="margin-left: 10px;">TF</span>
@@ -543,12 +630,28 @@
             <button type="button" class="tf-btn active" data-interval="1h">1H</button>
             <button type="button" class="tf-btn" data-interval="1d">1D</button>
 
+            <div class="ticker-search">
+              <input
+                id="custom-ticker"
+                class="ticker-input"
+                type="text"
+                placeholder="AAPL, TSLA, ^GSPC"
+                aria-label="Custom Yahoo ticker"
+              />
+              <button type="button" id="custom-ticker-go" class="ticker-go-btn">GO</button>
+            </div>
+
             <span id="chart-status">Connecting…</span>
           </div>
 
-          <p id="chart-feed-note" class="chart-feed-note">Crypto = live 24/7 · World indices = Yahoo Finance (no TradingView block)</p>
+          <p id="chart-feed-note" class="chart-feed-note">Universal feed: Yahoo Finance + Binance · Any global ticker via search</p>
 
-          <div id="darkpulsr-chart-host" class="flex-1 min-h-0"></div>
+          <div id="darkpulsr-chart-host" class="flex-1 min-h-0">
+            <div id="chart-loading-overlay" class="chart-loading-overlay" aria-hidden="true">
+              <div class="chart-spinner"></div>
+              <span class="chart-loading-text">Fetching market data…</span>
+            </div>
+          </div>
 
           <div id="overlay-control-panel" class="overlay-control-panel">
             <span class="panel-label">Astro Overlay</span>
@@ -656,13 +759,13 @@
     <span class="footer-brand">DarkPulsr</span> | Powered by Astro_Hiteshh | Advanced Astro-Financial Analytics
   </footer>
 
-  <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
-  <script src="js/binance-feed.js?v=3"></script>
-  <script src="js/yahoo-feed.js?v=3"></script>
-  <script src="js/market-data.js?v=3"></script>
-  <script src="js/astro-marker-layer.js?v=3"></script>
-  <script src="js/overlay-manager.js?v=3"></script>
-  <script src="js/darkpulsr-chart.js?v=3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="js/binance-feed.js?v=5"></script>
+  <script src="js/yahoo-feed.js?v=5"></script>
+  <script src="js/universal-market-data.js?v=5"></script>
+  <script src="js/astro-marker-layer.js?v=5"></script>
+  <script src="js/overlay-manager.js?v=5"></script>
+  <script src="js/darkpulsr-chart.js?v=5"></script>
   <script>
     const RASHIS = [
       'Mesha', 'Vrishabha', 'Mithuna', 'Karka', 'Simha', 'Kanya',
@@ -893,12 +996,32 @@
       checkAstroEvents();
 
       const chartStatus = document.getElementById('chart-status');
-      const darkPulsrChart = new DarkPulsrChart('darkpulsr-chart-host', {
-        feed: window.MarketData,
-        symbol: 'BTC',
-        interval: '1h',
-        statusEl: chartStatus,
-      });
+
+      if (typeof LightweightCharts === 'undefined') {
+        if (chartStatus) {
+          chartStatus.textContent = 'Chart library failed — check internet';
+          chartStatus.classList.add('error');
+        }
+        return;
+      }
+
+      let darkPulsrChart;
+      try {
+        darkPulsrChart = new DarkPulsrChart('darkpulsr-chart-host', {
+          feed: window.UniversalMarketData,
+          symbol: 'BTC',
+          interval: '1h',
+          statusEl: chartStatus,
+          spinnerEl: document.getElementById('chart-loading-overlay'),
+        });
+      } catch (error) {
+        console.error('[DarkPulsr] Chart boot failed:', error);
+        if (chartStatus) {
+          chartStatus.textContent = 'Chart init failed — refresh page';
+          chartStatus.classList.add('error');
+        }
+        return;
+      }
 
       const overlayManager = new OverlayManager(darkPulsrChart.getMarkerLayer());
       overlayManager.bindControlPanel(document.getElementById('overlay-control-panel'));
@@ -911,20 +1034,26 @@
       function selectChartSymbol(symbolKey) {
         document.querySelectorAll('.symbol-btn').forEach((b) => {
           b.classList.toggle('active', b.dataset.symbol === symbolKey);
+          b.classList.remove('loading');
         });
         document.querySelectorAll('.market-card[data-symbol]').forEach((card) => {
           card.classList.toggle('chart-active', card.dataset.symbol === symbolKey);
         });
+
+        const activeBtn = document.querySelector(`.symbol-btn[data-symbol="${symbolKey}"]`);
+        if (activeBtn) activeBtn.classList.add('loading');
+
         const interval = document.querySelector('.tf-btn.active')?.dataset.interval || '1h';
-        const statusEl = document.getElementById('chart-status');
-        if (statusEl) {
-          statusEl.textContent = `Loading ${symbolKey}…`;
-          statusEl.classList.remove('error');
-        }
+        const overlay = document.getElementById('chart-loading-overlay');
+        const loadingText = overlay?.querySelector('.chart-loading-text');
+        if (loadingText) loadingText.textContent = `Fetching ${symbolKey}…`;
+
         return darkPulsrChart.loadSymbol(symbolKey, interval).then(() => {
           overlayManager.refresh();
         }).catch(() => {
-          /* status already set in chart engine */
+          /* status set by chart engine */
+        }).finally(() => {
+          document.querySelectorAll('.symbol-btn').forEach((b) => b.classList.remove('loading'));
         });
       }
 
@@ -938,12 +1067,42 @@
         btn.addEventListener('click', () => {
           document.querySelectorAll('.tf-btn').forEach((b) => b.classList.remove('active'));
           btn.classList.add('active');
-          const symbol = document.querySelector('.symbol-btn.active')?.dataset.symbol || 'BTC';
+          const symbol = document.querySelector('.symbol-btn.active')?.dataset.symbol
+            || darkPulsrChart.symbol
+            || 'BTC';
+          const overlay = document.getElementById('chart-loading-overlay');
+          const loadingText = overlay?.querySelector('.chart-loading-text');
+          if (loadingText) loadingText.textContent = `Fetching ${symbol} · ${btn.dataset.interval}…`;
           darkPulsrChart.loadSymbol(symbol, btn.dataset.interval).then(() => {
             overlayManager.refresh();
           });
         });
       });
+
+      const customTickerInput = document.getElementById('custom-ticker');
+      const customTickerGo = document.getElementById('custom-ticker-go');
+
+      function loadCustomTicker() {
+        const raw = customTickerInput?.value?.trim();
+        if (!raw) return;
+
+        document.querySelectorAll('.symbol-btn').forEach((b) => b.classList.remove('active'));
+        const overlay = document.getElementById('chart-loading-overlay');
+        const loadingText = overlay?.querySelector('.chart-loading-text');
+        if (loadingText) loadingText.textContent = `Fetching ${raw.toUpperCase()}…`;
+
+        const interval = document.querySelector('.tf-btn.active')?.dataset.interval || '1h';
+        darkPulsrChart.loadSymbol(raw, interval).then(() => {
+          overlayManager.refresh();
+        });
+      }
+
+      if (customTickerGo) customTickerGo.addEventListener('click', loadCustomTicker);
+      if (customTickerInput) {
+        customTickerInput.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') loadCustomTicker();
+        });
+      }
 
       document.querySelectorAll('.market-card[data-symbol]').forEach((card) => {
         card.addEventListener('click', () => selectChartSymbol(card.dataset.symbol));

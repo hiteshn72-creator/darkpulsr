@@ -66,6 +66,8 @@ class DarkPulsrChart {
     this.symbol = options.symbol || 'BTC';
     this.stream = null;
     this.statusEl = options.statusEl || null;
+    this.spinnerEl = options.spinnerEl || null;
+    this.loadRequestId = 0;
 
     this._buildChart();
     this.markerLayer = new AstroMarkerLayer(this.chart, this.host);
@@ -78,12 +80,38 @@ class DarkPulsrChart {
     this.statusEl.classList.toggle('error', isError);
   }
 
+  _showSpinner(show) {
+    if (this.spinnerEl) {
+      this.spinnerEl.classList.toggle('active', show);
+      this.spinnerEl.setAttribute('aria-hidden', show ? 'false' : 'true');
+    }
+  }
+
+  _hostSize() {
+    const parent = this.host.parentElement;
+    const width = Math.max(this.host.clientWidth, parent?.clientWidth || 0, 320);
+    const height = Math.max(this.host.clientHeight, parent?.clientHeight || 0, 400);
+    return { width, height };
+  }
+
+  _resizeChart() {
+    const { width, height } = this._hostSize();
+    this.chart.applyOptions({ width, height });
+    this.markerLayer?.redraw();
+  }
+
   _buildChart() {
+    if (typeof LightweightCharts === 'undefined') {
+      throw new Error('LightweightCharts library not loaded');
+    }
+
+    const { width, height } = this._hostSize();
+
     this.chart = LightweightCharts.createChart(this.host, {
       ...DARKPULSR_CHART_THEME,
       ...DARKPULSR_CHART_INTERACTION,
-      width: this.host.clientWidth,
-      height: this.host.clientHeight,
+      width,
+      height,
     });
 
     this.chart.timeScale().applyOptions({
@@ -99,15 +127,19 @@ class DarkPulsrChart {
       wickUpColor: '#4ade80',
       wickDownColor: '#f87171',
     });
+
+    requestAnimationFrame(() => this._resizeChart());
+    setTimeout(() => this._resizeChart(), 250);
   }
 
   _bindResize() {
-    this._resizeObserver = new ResizeObserver((entries) => {
-      const { width, height } = entries[0].contentRect;
-      this.chart.applyOptions({ width, height });
-      this.markerLayer.redraw();
+    this._resizeObserver = new ResizeObserver(() => {
+      this._resizeChart();
     });
     this._resizeObserver.observe(this.host);
+    if (this.host.parentElement) {
+      this._resizeObserver.observe(this.host.parentElement);
+    }
   }
 
   _closeStream() {
@@ -118,35 +150,51 @@ class DarkPulsrChart {
   }
 
   _statusLabel(symbolKey) {
+    if (typeof this.feed.statusLabel === 'function') {
+      return this.feed.statusLabel(symbolKey);
+    }
     const cfg = this.feed.getConfig?.(symbolKey);
     if (!cfg) return symbolKey;
-    if (cfg.live) return `${cfg.label} · Live`;
-    return `${cfg.label} · Yahoo (last session)`;
+    return cfg.label || symbolKey;
   }
 
   async loadSymbol(symbolKey, interval = this.interval) {
+    const requestId = ++this.loadRequestId;
+
     this._closeStream();
     this.symbol = symbolKey;
     this.interval = interval;
-    this._setStatus(`Loading ${symbolKey}…`);
+
+    this.candleSeries.setData([]);
+    this.chart.timeScale().fitContent();
+    this._showSpinner(true);
+    this._setStatus(`Fetching ${symbolKey}…`);
 
     try {
       const candles = await this.feed.fetchKlines(symbolKey, interval);
+
+      if (requestId !== this.loadRequestId) return;
+
       this.candleSeries.setData(candles);
       this.chart.timeScale().fitContent();
       this._setStatus(this._statusLabel(symbolKey));
 
       this.stream = this.feed.subscribe(symbolKey, interval, (candle) => {
+        if (requestId !== this.loadRequestId) return;
         this.candleSeries.update(candle);
       });
 
-      if (window.OverlayManager && this.markerLayer) {
-        this.markerLayer.redraw();
-      }
+      this.markerLayer?.redraw();
     } catch (error) {
+      if (requestId !== this.loadRequestId) return;
       console.error('[DarkPulsrChart]', error);
-      this._setStatus(`Failed: ${symbolKey} — retry or pick BTC`, true);
+      this.candleSeries.setData([]);
+      this._setStatus(`Failed: ${symbolKey} — try BTC or refresh`, true);
       throw error;
+    } finally {
+      if (requestId === this.loadRequestId) {
+        this._showSpinner(false);
+      }
     }
   }
 

@@ -7,12 +7,14 @@ const DARKPULSR_SYMBOLS = {
     label: 'BTC/USDT',
     source: 'binance',
     binance: 'BTCUSDT',
+    yahoo: 'BTC-USD',
     live: true,
   },
   ETH: {
     label: 'ETH/USDT',
     source: 'binance',
     binance: 'ETHUSDT',
+    yahoo: 'ETH-USD',
     live: true,
   },
   NIFTY: {
@@ -63,7 +65,15 @@ const MarketData = {
     if (!cfg) throw new Error(`Unknown symbol: ${symbolKey}`);
 
     if (cfg.source === 'binance') {
-      return window.BinanceFeed.fetchKlines(cfg.binance, interval);
+      try {
+        return await window.BinanceFeed.fetchKlines(cfg.binance, interval);
+      } catch (error) {
+        console.warn(`[MarketData] Binance failed for ${symbolKey}, using Yahoo`, error);
+        if (cfg.yahoo) {
+          return window.YahooFeed.fetchKlines(cfg.yahoo, interval);
+        }
+        throw error;
+      }
     }
     return window.YahooFeed.fetchKlines(cfg.yahoo, interval);
   },
@@ -73,17 +83,26 @@ const MarketData = {
     if (!cfg) return null;
 
     if (cfg.source === 'binance') {
-      const connection = window.BinanceFeed.subscribeKlines(cfg.binance, interval, onCandle);
-      return {
-        type: 'ws',
-        connection,
-        close() {
-          connection?.close();
-        },
-      };
+      try {
+        const connection = window.BinanceFeed.subscribeKlines(cfg.binance, interval, onCandle);
+        connection.onerror = () => {
+          console.warn(`[MarketData] Binance WS failed for ${symbolKey}`);
+        };
+        return {
+          type: 'ws',
+          connection,
+          close() {
+            connection?.close();
+          },
+        };
+      } catch (error) {
+        console.warn(`[MarketData] Binance WS unavailable for ${symbolKey}`, error);
+      }
     }
 
-    const timer = setInterval(async () => {
+    if (!cfg.yahoo) return null;
+
+    const poll = async () => {
       try {
         const candles = await window.YahooFeed.fetchKlines(cfg.yahoo, interval);
         const last = candles[candles.length - 1];
@@ -91,8 +110,9 @@ const MarketData = {
       } catch (error) {
         console.warn('[MarketData] Yahoo poll failed:', error);
       }
-    }, 60000);
+    };
 
+    const timer = setInterval(poll, 60000);
     return {
       type: 'poll',
       timer,
