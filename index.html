@@ -246,19 +246,6 @@
       flex-shrink: 0;
     }
 
-    .tv-symbol-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 10px;
-      border: none;
-      border-radius: 4px;
-      background: transparent;
-      cursor: pointer;
-      text-align: left;
-      max-width: 280px;
-    }
-
     .tv-symbol-search-wrap {
       position: relative;
       flex: 0 1 320px;
@@ -381,40 +368,6 @@
       padding: 12px 10px;
       font-size: 12px;
       color: #787b86;
-    }
-
-    .tv-symbol-btn:hover {
-      background: #2a2e39;
-    }
-
-    .tv-symbol-btn-icon {
-      width: 16px;
-      height: 16px;
-      color: #787b86;
-      flex-shrink: 0;
-    }
-
-    .tv-symbol-btn-text {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
-
-    .tv-symbol-code {
-      font-size: 14px;
-      font-weight: 600;
-      color: #d1d4dc;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .tv-symbol-name {
-      font-size: 11px;
-      color: #787b86;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .tv-intervals {
@@ -671,54 +624,6 @@
       to { transform: rotate(360deg); }
     }
 
-    .ticker-search {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .ticker-input {
-      width: 140px;
-      padding: 5px 10px;
-      font-size: 0.65rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      border-radius: 3px;
-      border: 1px solid rgba(157, 78, 221, 0.45);
-      background: rgba(5, 5, 5, 0.8);
-      color: #FFD700;
-      outline: none;
-    }
-
-    .ticker-input:focus {
-      border-color: rgba(0, 240, 255, 0.55);
-      box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
-    }
-
-    .ticker-go-btn {
-      padding: 5px 12px;
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      border-radius: 3px;
-      border: 1px solid rgba(255, 215, 0, 0.45);
-      background: rgba(255, 215, 0, 0.08);
-      color: #FFD700;
-      cursor: pointer;
-    }
-
-    .ticker-go-btn:hover {
-      border-color: #FFD700;
-      box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
-    }
-
-    .symbol-btn.loading {
-      opacity: 0.55;
-      pointer-events: none;
-    }
-
     #darkpulsr-chart-host canvas {
       display: block;
     }
@@ -935,7 +840,6 @@
       }
     }
 
-    .symbol-btn,
     .overlay-toggle {
       padding: 6px 14px;
       font-size: 0.65rem;
@@ -950,34 +854,18 @@
       transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .symbol-btn:hover,
     .overlay-toggle:hover {
       border-color: rgba(0, 240, 255, 0.5);
       color: #00f0ff;
       box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
     }
 
-    .symbol-btn.active,
     .overlay-toggle.active {
       border-color: rgba(255, 215, 0, 0.55);
       color: #FFD700;
       box-shadow:
         0 0 14px rgba(255, 215, 0, 0.25),
         0 0 20px rgba(0, 240, 255, 0.1);
-    }
-
-    .chart-toolbar {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 10px 12px 6px;
-      flex-shrink: 0;
-      border-bottom: 1px solid rgba(157, 78, 221, 0.15);
-    }
-
-    .symbol-toolbar-mount {
-      display: contents;
     }
 
     .overlay-control-panel,
@@ -1000,79 +888,6 @@
       color: rgba(0, 240, 255, 0.75);
       margin-right: 6px;
       text-shadow: 0 0 8px rgba(0, 240, 255, 0.35);
-    }
-
-    .viewport-label {
-      font-size: 0.6rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: rgba(255, 215, 0, 0.7);
-      padding: 8px 12px 0;
-    }
-
-    .chart-symbol-trigger {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 200px;
-      max-width: 320px;
-      padding: 6px 12px 6px 10px;
-      margin-right: 6px;
-      border-radius: 4px;
-      border: 1px solid rgba(157, 78, 221, 0.35);
-      background: rgba(8, 8, 12, 0.95);
-      cursor: pointer;
-      text-align: left;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-    }
-
-    .chart-symbol-trigger:hover {
-      border-color: rgba(0, 240, 255, 0.45);
-      box-shadow: 0 0 14px rgba(0, 240, 255, 0.12);
-      background: rgba(12, 12, 18, 0.98);
-    }
-
-    .chart-symbol-trigger-icon {
-      width: 18px;
-      height: 18px;
-      flex-shrink: 0;
-      color: rgba(0, 240, 255, 0.75);
-    }
-
-    .chart-symbol-trigger-text {
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-      min-width: 0;
-      flex: 1;
-    }
-
-    .chart-symbol-code {
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      color: #00f0ff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .chart-symbol-name {
-      font-size: 0.58rem;
-      color: rgba(209, 213, 219, 0.65);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .chart-symbol-kbd {
-      font-size: 0.52rem;
-      letter-spacing: 0.06em;
-      color: rgba(157, 78, 221, 0.55);
-      border: 1px solid rgba(157, 78, 221, 0.25);
-      border-radius: 3px;
-      padding: 2px 5px;
-      flex-shrink: 0;
     }
 
     body.symbol-search-open {
@@ -1775,7 +1590,7 @@
   </script>
   <script src="js/binance-feed.js?v=8"></script>
   <script src="js/yahoo-feed.js?v=14"></script>
-  <script src="js/universal-market-data.js?v=15"></script>
+  <script src="js/universal-market-data.js?v=16"></script>
   <script src="js/symbol-search-modal.js?v=4"></script>
   <script src="js/inline-symbol-search.js?v=1"></script>
   <script src="js/astro-marker-layer.js?v=9"></script>

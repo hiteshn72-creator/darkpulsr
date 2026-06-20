@@ -286,64 +286,6 @@ const UniversalMarketData = {
 
 
 
-  renderToolbar(mountEl, onSelect, { activeKey = 'BTC' } = {}) {
-
-    if (!mountEl) return;
-
-
-
-    mountEl.innerHTML = TOOLBAR_GROUPS.map((group, groupIndex) => {
-
-      const margin = groupIndex > 0 ? ' style="margin-left: 10px;"' : '';
-
-      const buttons = group.keys
-
-        .filter((key) => this.catalog[key])
-
-        .map((key) => {
-
-          const cfg = this.catalog[key];
-
-          const active = key === activeKey ? ' active' : '';
-
-          const title = cfg.label || key;
-
-          return `<button type="button" class="symbol-btn${active}" data-symbol="${key}" title="${title}">${cfg.shortLabel || key}</button>`;
-
-        })
-
-        .join('');
-
-
-
-      return `<span class="panel-label"${margin}>${group.label}</span>${buttons}`;
-
-    }).join('');
-
-
-
-    mountEl.querySelectorAll('.symbol-btn').forEach((btn) => {
-
-      btn.addEventListener('click', () => onSelect(btn.dataset.symbol));
-
-    });
-
-  },
-
-
-
-  setActiveToolbarSymbol(symbolKey) {
-
-    document.querySelectorAll('.symbol-btn').forEach((b) => {
-
-      b.classList.toggle('active', b.dataset.symbol === symbolKey);
-
-    });
-
-  },
-
-
-
   isLive(key) {
 
     return !!this.resolve(key)?.live;
