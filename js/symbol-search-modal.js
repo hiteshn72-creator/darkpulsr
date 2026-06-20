@@ -327,10 +327,12 @@
   }
 
   class SymbolSearchModal {
-    constructor(root, { onSelect, onSymbolBarUpdate } = {}) {
+    constructor(root, { onSelect, onSymbolBarUpdate, onCompare } = {}) {
       this.root = root;
       this.onSelect = onSelect || (() => {});
       this.onSymbolBarUpdate = onSymbolBarUpdate || (() => {});
+      this.onCompare = onCompare || (() => {});
+      this.mode = 'symbol';
       this.activeCategory = 'all';
       this.sourceFilter = 'all';
       this.typeFilter = 'all';
@@ -426,7 +428,17 @@
       });
     }
 
+    openCompare(initialQuery = '') {
+      this.mode = 'compare';
+      this._setTitle('Compare symbol');
+      this.open(initialQuery);
+    }
+
     open(initialQuery = '') {
+      if (this.mode !== 'compare') {
+        this.mode = 'symbol';
+        this._setTitle('Symbol search');
+      }
       this.isOpen = true;
       this.root.classList.remove('hidden');
       this.root.setAttribute('aria-hidden', 'false');
@@ -455,6 +467,16 @@
       document.body.classList.remove('symbol-search-open');
       document.removeEventListener('keydown', this._boundKeydown);
       this.activeIndex = -1;
+      this.mode = 'symbol';
+      this._setTitle('Symbol search');
+    }
+
+    _setTitle(text) {
+      const title = this.root.querySelector('#symbol-search-title');
+      if (title) title.textContent = text;
+      if (this.els.status && !this.isOpen) {
+        this.els.status.textContent = 'Type a symbol, company name, ISIN, or CUSIP…';
+      }
     }
 
     _onKeydown(event) {
@@ -507,7 +529,10 @@
         if (this.activeIndex < 0 && catalogHits.length) this.activeIndex = 0;
         this._updateExchangeOptions();
         this._renderResults();
-        this._setStatus(`${catalogHits.length} DarkPulsr markets · type to filter`);
+        const hint = this.mode === 'compare'
+          ? `${catalogHits.length} symbols · pick one to compare on chart`
+          : `${catalogHits.length} DarkPulsr markets · type to filter`;
+        this._setStatus(hint);
         return;
       }
 
@@ -735,6 +760,13 @@
       }
 
       saveRecent(item);
+
+      if (this.mode === 'compare') {
+        this.onCompare(item.chartKey, item);
+        this.close();
+        return;
+      }
+
       this.onSymbolBarUpdate(item);
       this.onSelect(item.chartKey, item);
       this.close();

@@ -65,6 +65,7 @@
       this.handlers = {
         onSymbolSelect: options.onSymbolSelect || (() => {}),
         onCompare: options.onCompare || (() => {}),
+        onCompareRemove: options.onCompareRemove || (() => {}),
         onTimeframeChange: options.onTimeframeChange || (() => {}),
         onSettings: options.onSettings || (() => {}),
         onIndicatorAdd: options.onIndicatorAdd || (() => {}),
@@ -113,9 +114,10 @@
               <span class="dp-toolbar-symbol-label" data-tb-symbol-label>BTC/USDT</span>
               <span class="dp-toolbar-icon dp-toolbar-icon-sm">${ICONS.chevronDown}</span>
             </button>
-            <button type="button" class="dp-toolbar-btn dp-toolbar-btn-icon" data-action="compare" title="Compare or add symbol">
+            <button type="button" class="dp-toolbar-btn dp-toolbar-btn-icon" data-action="compare" title="Compare symbol — overlay on chart">
               <span class="dp-toolbar-icon">${ICONS.plus}</span>
             </button>
+            <div class="dp-toolbar-compare-wrap hidden" data-tb-compare-wrap aria-label="Compare symbols"></div>
           </div>
 
           <div class="dp-toolbar-section dp-toolbar-center">
@@ -241,6 +243,7 @@
         redoBtn: this.root.querySelector('[data-action="redo"]'),
         indicatorSearch: this.root.querySelector('[data-indicator-search]'),
         indicatorList: this.root.querySelector('[data-indicator-list]'),
+        compareList: this.root.querySelector('[data-tb-compare-wrap]'),
       };
     }
 
@@ -261,6 +264,11 @@
         }
         if (action === 'compare') {
           this.handlers.onCompare(this.state);
+          return;
+        }
+        if (action === 'compare-remove') {
+          const key = target.dataset.compareKey;
+          if (key) this.handlers.onCompareRemove(key, this.state);
           return;
         }
         if (action === 'timeframe-toggle') {
@@ -386,6 +394,29 @@
       this.root.querySelectorAll('[data-layout]').forEach((btn) => {
         btn.classList.toggle('is-active', btn.dataset.layout === this.state.layout);
       });
+
+      this._renderCompareChips();
+    }
+
+    _renderCompareChips() {
+      const wrap = this.els.compareList;
+      if (!wrap) return;
+
+      const list = this.state.compareSymbols || [];
+      if (!list.length) {
+        wrap.classList.add('hidden');
+        wrap.innerHTML = '';
+        return;
+      }
+
+      wrap.classList.remove('hidden');
+      wrap.innerHTML = list.map((item) => (
+        `<span class="dp-toolbar-compare-chip" style="--chip-color:${escapeHtml(item.color || '#2962ff')}">
+          <span class="dp-toolbar-compare-dot"></span>
+          <span class="dp-toolbar-compare-label">${escapeHtml(item.label || item.key)}</span>
+          <button type="button" class="dp-toolbar-compare-remove" data-action="compare-remove" data-compare-key="${escapeHtml(item.key)}" title="Remove compare">×</button>
+        </span>`
+      )).join('');
     }
 
     _toggleMenu(name) {

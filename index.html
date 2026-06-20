@@ -262,7 +262,7 @@
       min-width: 0;
     }
 
-    .dp-toolbar-left { flex-shrink: 0; }
+    .dp-toolbar-left { flex-shrink: 0; flex-wrap: wrap; }
     .dp-toolbar-center { flex: 1; justify-content: center; flex-wrap: wrap; }
     .dp-toolbar-right { flex-shrink: 0; margin-left: auto; }
 
@@ -291,6 +291,61 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .dp-toolbar-compare-wrap {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .dp-toolbar-compare-wrap.hidden {
+      display: none;
+    }
+
+    .dp-toolbar-compare-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px 2px 5px;
+      border: 1px solid #e0e3eb;
+      border-radius: 4px;
+      background: #f8f9fd;
+      font-size: 11px;
+      font-weight: 600;
+      color: #131722;
+    }
+
+    .dp-toolbar-compare-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--chip-color, #2962ff);
+      flex-shrink: 0;
+    }
+
+    .dp-toolbar-compare-label {
+      max-width: 72px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dp-toolbar-compare-remove {
+      border: none;
+      background: transparent;
+      color: #787b86;
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+
+    .dp-toolbar-compare-remove:hover {
+      color: #ef5350;
+      background: rgba(239, 83, 80, 0.08);
     }
 
     .dp-toolbar-btn {
@@ -1880,11 +1935,11 @@
   <script src="js/binance-feed.js?v=8"></script>
   <script src="js/yahoo-feed.js?v=14"></script>
   <script src="js/universal-market-data.js?v=16"></script>
-  <script src="js/symbol-search-modal.js?v=4"></script>
+  <script src="js/symbol-search-modal.js?v=5"></script>
   <script src="js/astro-marker-layer.js?v=9"></script>
   <script src="js/overlay-manager.js?v=8"></script>
-  <script src="js/chart-toolbar.js?v=1"></script>
-  <script src="js/darkpulsr-chart.js?v=11"></script>
+  <script src="js/chart-toolbar.js?v=2"></script>
+  <script src="js/darkpulsr-chart.js?v=12"></script>
   <script>
     const RASHIS = [
       'Mesha', 'Vrishabha', 'Mithuna', 'Karka', 'Simha', 'Kanya',
@@ -2127,10 +2182,44 @@
         chartToolbar?.setState({ symbol: symbolKey, symbolLabel: label });
       }
 
+      function syncCompareToolbar() {
+        chartToolbar?.setState({ compareSymbols: darkPulsrChart?.getCompareSymbols?.() || [] });
+      }
+
+      async function addCompareSymbol(symbolKey) {
+        if (!darkPulsrChart) return;
+        if (symbolKey === activeChartKey) {
+          chartToolbar?.setState({ statusText: 'Cannot compare with main symbol' });
+          return;
+        }
+        try {
+          await darkPulsrChart.addCompare(symbolKey);
+          syncCompareToolbar();
+          const cfg = window.UniversalMarketData?.resolve(symbolKey);
+          const label = cfg?.shortLabel || cfg?.label || symbolKey;
+          chartToolbar?.setState({ statusText: `Compare: ${label} added` });
+        } catch (error) {
+          console.warn('[Compare]', error);
+          chartToolbar?.setState({
+            statusText: error?.message || 'Compare failed',
+          });
+        }
+      }
+
+      function removeCompareSymbol(symbolKey) {
+        if (!darkPulsrChart) return;
+        darkPulsrChart.removeCompare(symbolKey);
+        syncCompareToolbar();
+      }
+
       function loadChartSymbol(symbolKey, metaItem, intervalOverride) {
         document.querySelectorAll('.market-card[data-symbol]').forEach((card) => {
           card.classList.toggle('chart-active', card.dataset.symbol === symbolKey);
         });
+
+        if (darkPulsrChart?.hasCompare?.(symbolKey)) {
+          darkPulsrChart.removeCompare(symbolKey);
+        }
 
         const interval = intervalOverride || activeTimeframe || '1h';
         const overlay = document.getElementById('chart-loading-overlay');
@@ -2140,6 +2229,7 @@
         return darkPulsrChart.loadSymbol(symbolKey, interval).then(() => {
           overlayManager.refresh();
           updateSymbolBar(symbolKey, metaItem);
+          syncCompareToolbar();
         }).catch(() => {
           /* status set by chart engine */
         });
@@ -2158,7 +2248,10 @@
         const overlay = document.getElementById('chart-loading-overlay');
         const loadingText = overlay?.querySelector('.chart-loading-text');
         if (loadingText) loadingText.textContent = `Fetching ${symbol} · ${tf}…`;
-        return darkPulsrChart.loadSymbol(symbol, tf).then(() => overlayManager.refresh());
+        return darkPulsrChart.loadSymbol(symbol, tf).then(() => {
+          overlayManager.refresh();
+          syncCompareToolbar();
+        });
       }
 
       if (chartToolbarRoot && window.ChartToolbar) {
@@ -2170,7 +2263,8 @@
             statusText: 'Connecting…',
           },
           onSymbolSelect: () => symbolSearchModal?.open(),
-          onCompare: () => console.info('[ChartToolbar] Compare — coming soon'),
+          onCompare: () => symbolSearchModal?.openCompare(),
+          onCompareRemove: (key) => removeCompareSymbol(key),
           onTimeframeChange: (tf) => changeTimeframe(tf),
           onSettings: () => console.info('[ChartToolbar] Settings opened'),
           onIndicatorAdd: (id) => console.info('[ChartToolbar] Indicator — coming soon:', id),
@@ -2224,6 +2318,9 @@
         {
           onSelect(symbolKey, item) {
             loadChartSymbol(symbolKey, item);
+          },
+          onCompare(symbolKey) {
+            addCompareSymbol(symbolKey);
           },
           onSymbolBarUpdate(item) {
             updateSymbolBar(item.chartKey, item);

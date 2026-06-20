@@ -138,6 +138,12 @@ const TV_CANDLE_COLORS = {
 
 
 
+const COMPARE_LINE_COLORS = ['#2962ff', '#f7931a', '#9c27b0', '#00bcd4'];
+
+const MAX_COMPARE_SYMBOLS = 4;
+
+
+
 const DARKPULSR_CHART_INTERACTION = {
 
   handleScroll: {
@@ -357,6 +363,8 @@ class DarkPulsrChart {
     this._isZooming = false;
 
     this._rangeLocked = false;
+
+    this.compareEntries = [];
 
 
 
@@ -900,6 +908,14 @@ class DarkPulsrChart {
 
 
 
+      if (this.compareEntries.length) {
+
+        await this._refreshAllCompares();
+
+      }
+
+
+
       this.stream = this.feed.subscribe(symbolKey, interval, (c) => {
 
         this._onStreamCandle(c, requestId);
@@ -929,6 +945,186 @@ class DarkPulsrChart {
     } finally {
 
       if (requestId === this.loadRequestId) this._showSpinner(false);
+
+    }
+
+  }
+
+
+
+  _compareLabel(symbolKey) {
+
+    const cfg = this.feed.getConfig?.(symbolKey);
+
+    return cfg?.shortLabel || cfg?.label || symbolKey;
+
+  }
+
+
+
+  _compareLineData(candles) {
+
+    return candles.map((c) => ({ time: c.time, value: c.close }));
+
+  }
+
+
+
+  _syncLeftPriceScale() {
+
+    const visible = this.compareEntries.length > 0;
+
+    this.chart.priceScale('left').applyOptions({
+
+      visible,
+
+      borderColor: '#2a2e39',
+
+      autoScale: true,
+
+    });
+
+  }
+
+
+
+  getCompareSymbols() {
+
+    return this.compareEntries.map((entry) => ({
+
+      key: entry.symbolKey,
+
+      label: entry.label,
+
+      color: entry.color,
+
+    }));
+
+  }
+
+
+
+  hasCompare(symbolKey) {
+
+    return this.compareEntries.some((e) => e.symbolKey === symbolKey);
+
+  }
+
+
+
+  async addCompare(symbolKey) {
+
+    const key = String(symbolKey || '').trim().toUpperCase();
+
+    if (!key) throw new Error('Compare symbol required');
+
+    if (key === String(this.symbol).toUpperCase()) {
+
+      throw new Error('Cannot compare with the main symbol');
+
+    }
+
+    if (this.hasCompare(key)) return this.getCompareSymbols();
+
+    if (this.compareEntries.length >= MAX_COMPARE_SYMBOLS) {
+
+      throw new Error(`Maximum ${MAX_COMPARE_SYMBOLS} compare symbols`);
+
+    }
+
+
+
+    const raw = await this.feed.fetchKlines(key, this.interval);
+
+    const candles = sanitizeCandles(raw, this.interval);
+
+    if (!candles.length) throw new Error(`No data for ${key}`);
+
+
+
+    const label = this._compareLabel(key);
+
+    const color = COMPARE_LINE_COLORS[this.compareEntries.length % COMPARE_LINE_COLORS.length];
+
+    const series = this.chart.addLineSeries({
+
+      color,
+
+      lineWidth: 2,
+
+      priceScaleId: 'left',
+
+      title: label,
+
+      crosshairMarkerVisible: true,
+
+      lastValueVisible: true,
+
+      priceLineVisible: false,
+
+    });
+
+    series.setData(this._compareLineData(candles));
+
+    this.compareEntries.push({ symbolKey: key, series, label, color });
+
+    this._syncLeftPriceScale();
+
+    return this.getCompareSymbols();
+
+  }
+
+
+
+  removeCompare(symbolKey) {
+
+    const key = String(symbolKey || '').trim().toUpperCase();
+
+    const idx = this.compareEntries.findIndex((e) => e.symbolKey === key);
+
+    if (idx < 0) return this.getCompareSymbols();
+
+    const entry = this.compareEntries[idx];
+
+    this.chart.removeSeries(entry.series);
+
+    this.compareEntries.splice(idx, 1);
+
+    this._syncLeftPriceScale();
+
+    return this.getCompareSymbols();
+
+  }
+
+
+
+  clearCompare() {
+
+    this.compareEntries.forEach((entry) => this.chart.removeSeries(entry.series));
+
+    this.compareEntries = [];
+
+    this._syncLeftPriceScale();
+
+    return [];
+
+  }
+
+
+
+  async _refreshAllCompares() {
+
+    const keys = this.compareEntries.map((e) => e.symbolKey);
+
+    this.compareEntries.forEach((entry) => this.chart.removeSeries(entry.series));
+
+    this.compareEntries = [];
+
+    for (const key of keys) {
+
+      if (key === String(this.symbol).toUpperCase()) continue;
+
+      await this.addCompare(key);
 
     }
 
